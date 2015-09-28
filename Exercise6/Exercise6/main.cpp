@@ -1,7 +1,7 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include <iostream>
-//hey nasko 
+//hey nasko :D
 using namespace std;
 using namespace cv;
 
