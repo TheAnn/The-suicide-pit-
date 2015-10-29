@@ -7,6 +7,8 @@
 using namespace cv;
 using namespace std;
 
+
+
 void rotate(Mat src, double rotateAngle, Mat dst, int x, int y)
 {
 	Mat r = cv::getRotationMatrix2D(Point(x, y), rotateAngle, 1.0);
@@ -15,29 +17,29 @@ void rotate(Mat src, double rotateAngle, Mat dst, int x, int y)
 
 int main(int, char)
 {
-	//Initializing all the variables
-	int x, y;
-	float angle;
+	//Vari from other classes
 	int radius = 150;
-	float speed = 0;
-	float rotateSpeed = 0;
 	int answers[12] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+
+	//Initializing all the variables
+	double x, y;
+	double angle;
+	double speed = 0;
+	double rotateSpeed = 0;
 	int answersSize;
 
+	//Declaring the array size, since c++ is stoopid
+	//Also spacing numbers and delcaring start position
 	answersSize = sizeof(answers) / sizeof(*answers);
 	angle = 2*M_PI / answersSize;
 	x = radius*sin(angle * answersSize) + 500 / 2;
 	y = radius*cos(angle * answersSize) + 500 / 2;
 	
-	
-
-	//creating the text
+	//Initializing the unchanging features of the text
 	int fontFace = FONT_HERSHEY_SIMPLEX;
 	double fontScale = 0.7;
 	int thickness = 3;
 	int baseline = 0;
-
-
 
 	for (;;)
 	{
@@ -46,7 +48,7 @@ int main(int, char)
 
 		for (int i = 0; i < answersSize; i++)
 		{
-			//Create the number inside the circle
+			//Initialzing the changing features inside the circle, such as text and position
 			String text = to_string(answers[i]);
 			Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
 			baseline += thickness;
@@ -57,12 +59,12 @@ int main(int, char)
 			//Declaring the position of the answer
 			x = radius*sin(angle * i + speed) + 500 / 2;
 			y = radius*cos(angle * i + speed) + 500 / 2;
-			
+			Point answerPos(x, y);
+
 			//Creating the numbers to be shown
-			circle(image, Point(x, y), 20, Scalar::all(255), 1, 1);
+			circle(image, answerPos, 20, Scalar::all(255), 1, 1);
 			putText(textImg, text, Point(x - textSize.width / 2, y + textSize.height / 2), fontFace, fontScale, Scalar::all(255), 1, 8);
 			//rotate(textImg, rotateSpeed, textImg, x, y);
-
 			//Adds the new text image to the source image
 			image = image + textImg;
 		}
