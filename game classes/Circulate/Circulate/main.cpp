@@ -20,14 +20,14 @@ int main(int, char)
 	int rotateX, rotateY;
 	int angle = 2 * M_PI / 1;
 	float rotateAngle;
-	int radius = 50;
+	int radius = 150;
 	float speed = 0;
 	float rotateSpeed = 0;
 
 	//creating the text
-	String text = "text";
+	String text = "3";
 	int fontFace = FONT_HERSHEY_SIMPLEX;
-	double fontScale = 1;
+	double fontScale = 0.7;
 	int thickness = 3;
 	int baseline = 0;
 	Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
@@ -38,7 +38,7 @@ int main(int, char)
 	{
 		Mat image = Mat::zeros(500, 500, CV_8UC3);
 		Mat textImg = Mat::zeros(image.rows, image.cols, image.type());
-		circle(image, Point(x, y), 50, Scalar(255, 0, 0), 1, 1);
+		circle(image, Point(x, y), 20, Scalar(255, 0, 0), 1, 1);
 		putText(textImg, text, Point(x - textSize.width / 2, y + textSize.height / 2), fontFace, fontScale, Scalar::all(255), 1, 8);
 		rotate(textImg, rotateSpeed, textImg, x, y);
 
@@ -47,7 +47,7 @@ int main(int, char)
 		x = radius*sin(angle * 1 + speed) + 500 / 2;
 		y = radius*cos(angle * 1 + speed) + 500 / 2;
 		speed += 0.05;
-		rotateSpeed += 1;
+		rotateSpeed += 2.8;
 		waitKey(0);
 	}
 	return 0;
