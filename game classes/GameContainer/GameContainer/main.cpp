@@ -8,7 +8,7 @@ using namespace std;
 
 class GameContainer
 {
-	float tempPlaceX, tempPlaceY;
+	double tempPlaceX, tempPlaceY;
 	int tempSizeX, tempSizeY;
 	int tempName;
 public:
@@ -16,8 +16,8 @@ public:
 	int sizeX() { return 100; }	//This is the number of the Horisontal size of the game board
 	int sizeY() { return 200; }	//This is the number of the Vertical size of the game board
 	int name = tempName; //Initialzed the ID in the constructer
-	float placeX = tempPlaceX;	//Initialzed the placeX in the constructer
-	float placeY = tempPlaceY;	//Initialzed the placeT in the constructer
+	double placeX = tempPlaceX;	//Initialzed the placeX in the constructer
+	double placeY = tempPlaceY;	//Initialzed the placeT in the constructer
 };
 
 void GameContainer::containerConstructor(int x, int y) {
