@@ -26,7 +26,7 @@ void spinningCircles(int answersSize, int answers[], int fontFace, double fontSc
 		Point answerPos(x, y);
 
 		//Creating the numbers to be shown
-		circle(img, answerPos, 20, Scalar::all(255), 1, 1);
+		circle(img, answerPos, 20, Scalar(0,0,255), 1, 1);
 		putText(img, text, Point(x - textSize.width / 2, y + textSize.height / 2), fontFace, fontScale, Scalar::all(255), 1, 8);
 		//rotate(textImg, rotateSpeed, textImg, x, y);
 		//Adds the new text image to the source image
@@ -72,8 +72,8 @@ int main(int, char)
 		//Creating the matrix for the source image (The one getting shown)
 		Mat image = Mat::zeros(500, 500, CV_8UC3);
 		
-		speedRight += 0.05;
-		speedLeft -= 0.05;
+		speedRight += 0.02;
+		speedLeft -= 0.02;
 		rotateSpeed += 2.8;
 		
 			//The inner circle
@@ -83,7 +83,10 @@ int main(int, char)
 			spinningCircles(answersSize, answers, fontFace, fontScale, thickness, baseline, x, y, radiusOuter, angle, speedLeft, image);		
 		
 		imshow("cool pic", image);
-		waitKey(0);
+
+		if (waitKey(30) >= 0){
+			break;
+		}
 	}
 	return 0;
 }
