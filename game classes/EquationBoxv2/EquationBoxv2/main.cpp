@@ -59,38 +59,39 @@ void EquationBox::pickEquation(){
 
 void EquationBox::createEquation(){
 	srand((double)time(NULL));
-		rNumber1 = rand() % 11;
-		rNumber2 = rand() % 11;
-		rOperator = rand() % 2;
-		
-		if (rNumber1 <= rNumber2){
-			rTempNumber1 = rNumber1;
-			rNumber2 = rNumber1;
-			rNumber1 = rTempNumber1;
-		}
+	rNumber1 = rand() % 11;
+	rNumber2 = rand() % 11;
+	rOperator = rand() % 2;
 
-		if (rOperator == 1){ //in here goes an equation with subtraction
-			/*cout << "what is " << rNumber1 << "-" << rNumber2 << "?\n";
-			solveableEquation = rNumber1 + rNumber2;
-			realAnswer = rNumber1 - rNumber2;
-			cout << solveableEquation;
-			cin >> yourAnswer;
-			if (realAnswer == yourAnswer)
-				cout << "Correct!";
-			else
-				cout << "u suck";*/
-			cout << "Subtraction of numbers \n";
-		} else{ //In here goes an equation with addition
-			/*cout << "what is " << rNumber1 << "+" << rNumber2 << "?\n";
-			cin >> yourAnswer;
-			realAnswer = rNumber1 + rNumber2;
+	if (rNumber1 <= rNumber2){
+		rTempNumber1 = rNumber1;
+		rNumber2 = rNumber1;
+		rNumber1 = rTempNumber1;
+	}
 
-			if (realAnswer == yourAnswer)
-				cout << "Correct!";
-			else
-				cout << "u suck";*/
-			cout << "Addition of numbers \n";
-		}
+	if (rOperator == 1){ //in here goes an equation with subtraction
+		/*cout << "what is " << rNumber1 << "-" << rNumber2 << "?\n";
+		solveableEquation = rNumber1 + rNumber2;
+		realAnswer = rNumber1 - rNumber2;
+		cout << solveableEquation;
+		cin >> yourAnswer;
+		if (realAnswer == yourAnswer)
+		cout << "Correct!";
+		else
+		cout << "u suck";*/
+		cout << "Subtraction of numbers \n";
+	}
+	else{ //In here goes an equation with addition
+		/*cout << "what is " << rNumber1 << "+" << rNumber2 << "?\n";
+		cin >> yourAnswer;
+		realAnswer = rNumber1 + rNumber2;
+
+		if (realAnswer == yourAnswer)
+		cout << "Correct!";
+		else
+		cout << "u suck";*/
+		cout << "Addition of numbers \n";
+	}
 }
 
 int main(int, char)
@@ -99,6 +100,5 @@ int main(int, char)
 	equations.eqLocation();
 	equations.pickEquation();
 	equations.createEquation();
-
 	return 0;
 }

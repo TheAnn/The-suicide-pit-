@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "eqLocation", "eqLocation\eqLocation.vcxproj", "{FD539F90-8A82-45B6-852F-AEFE536C88FE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EquationBoxv2", "EquationBoxv2\EquationBoxv2.vcxproj", "{FD539F90-8A82-45B6-852F-AEFE536C88FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
