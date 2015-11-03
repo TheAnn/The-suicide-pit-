@@ -1,16 +1,24 @@
-#include "opencv2/opencv.hpp"
+//Creating Digital Watch in C++
+#include<iostream>
+#include<Windows.h>
+using namespace std;
 
-using namespace cv;
+struct time{
 
-class Timer{
-	int time;
-public:
-	void start(){
-
-	}
+	int sec;
 };
-
-int main(int, char)
+int main()
 {
-	return 0;
+	time a;
+	a.sec = 0;
+			for (int k = 0; k<11; k++)
+			{
+				cout << "Timer: " << a.sec << endl;
+				a.sec++;
+				Sleep(1000);
+				system("Cls"); 
+				if (a.sec == 10){
+					cout << "Stop" << endl;
+				}
+			}
 }
