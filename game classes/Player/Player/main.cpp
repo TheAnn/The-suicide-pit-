@@ -5,7 +5,7 @@ using namespace cv;
 class Player{
 	//Initiate all the variables and construcer in this class
 public:
-	static int pColor;
+	static ;
 };
 
 

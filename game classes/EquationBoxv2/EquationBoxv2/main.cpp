@@ -6,9 +6,10 @@ using namespace cv;
 using namespace std;
 
 class EquationBox{
-	int tempState = 1;
-	bool tempVisibility = true;
 	int collide = 1; //The collide should come from the Hand class
+	int tempState = 1; //The state should come from the game container
+
+	bool tempVisibility = true;
 	int temprNumber1, temprNumber2, temprTempNumber1;
 	int tempyourAnswer, temprealAnswer;
 	int temprOperator;
@@ -23,6 +24,7 @@ public:
 	String solveableEquation = tempsolveableEquation;
 	bool visibility = tempVisibility;
 	int state = tempState;
+	//Functions
 	void eqLocation();
 	void pickEquation();
 	void createEquation();
@@ -53,7 +55,7 @@ void EquationBox::eqLocation()
 void EquationBox::pickEquation(){
 	if (collide % 2 == 0){
 		//if (hand.pColor == eq.pColor) //Checks if the color on the hand picking and the equation adds up
-		state = 2;
+			state = 2;
 	}
 }
 
