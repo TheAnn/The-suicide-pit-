@@ -1,15 +1,19 @@
-//Creating Digital Watch in C++
+// Timer class
 #include<iostream>
 #include<Windows.h>
 using namespace std;
 
-struct time{
+//start the variables
+struct timer{
 
 	int sec;
+
 };
+
 int main()
 {
-	time a;
+	//initialize the timer class by giving it another name
+	timer a;
 	a.sec = 0;
 			for (int k = 0; k<11; k++)
 			{
