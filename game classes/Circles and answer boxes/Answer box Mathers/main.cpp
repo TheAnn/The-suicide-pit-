@@ -58,13 +58,12 @@ int main(int, char)
 	Mat image = Mat::zeros(width, height, CV_8UC3);
 	
 	// Draw a rectangle -> void rectangle(Mat& img, Point pt1, Point pt2, const Scalar& color, int thickness=1, int lineType=8)
-	
 	float pt1 = (4.5*height / 5); 
 	float pt2 = (3*width / 5);
 	float pt3 = (height / 4);
 	float pt4 = (0.3*width / 5);
+	
 	// The points are made to have the correct position for the answerboxes but we have to change them a bit when we have the correct size of the table. 
-
 	rectangle(image, Point(pt1, pt2), Point (pt1 + 50, pt3) , Scalar(255, 255, 255), -2); //The values for the rectangle are the points defined above. We added 50 to set the size of the box. 
 	rectangle(image, Point(pt4, pt2), Point (pt4 + 50, pt3) , Scalar(255, 255, 255), -2); 
 
