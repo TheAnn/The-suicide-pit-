@@ -12,9 +12,10 @@ using namespace std;
 
 class GameContainer
 {
+	Mat image1 = imread("C:/images/mathers.png", 1);
 	int tempcollide = 1;
-	int tempSizeX = 800; // X-size of the gameboard
-	int tempSizeY = 400; // Y-size of the gameboard
+	int tempSizeX = image1.cols; // X-size of the gameboard
+	int tempSizeY = image1.rows; // Y-size of the gameboard
 	double tempPlaceX, tempPlaceY; //The placement of objects on the gameboard
 	int tempName; //The id of objects
 	int tempeqState = 1; //The placement of the equation.
@@ -27,8 +28,9 @@ public:
 	int collide = tempcollide;
 	int sizeX = tempSizeX;
 	int sizeY = tempSizeY;
-	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
 	int name = tempName;
+	Mat image = imread("C:/images/mathers.png", 1);
+	//Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
 	double placeX = tempPlaceX;
 	double placeY = tempPlaceY;	
 	int eqState = tempeqState;
@@ -49,8 +51,7 @@ public:
 	void createCircles(){
 		circle(image, Point(sizeX / 2, sizeY / 2), radiusIn, Scalar(255, 255, 255), 1, 8);
 		circle(image, Point(sizeX / 2, sizeY / 2), radiusMed, Scalar(255, 255, 255), 1, 8);
-		circle(image, Point(sizeX / 2, sizeY / 2), radiusOut, Scalar(255, 255, 255), 1, 8);
-		
+		circle(image, Point(sizeX / 2, sizeY / 2), radiusOut, Scalar(255, 255, 255), 1, 8);	
 	};
 };
 
@@ -214,8 +215,8 @@ public:
 void Answers::circulate(int x, int y){
 	{
 		//Vari from other classes
-		int radiusOuter = sizeY / 2 - circleRadius;
-		int radiusInner = sizeY / 2 - circleRadius*4;
+		double radiusOuter = sizeY / 2 - circleRadius*6;
+		double radiusInner = sizeY / 2 - circleRadius*9;
 		int answers[12] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
 		//Declaring the array size, since c++ is stoopid
@@ -304,9 +305,6 @@ int main(int, char)
 	equations.pickEquation();
 	equations.createEquation();
 
-	Circles circles;
-	circles.createCircles();
-
 	AnswerBox answerBoxP1;
 	AnswerBox answerBoxP2;
 	answerBoxP1.checkAnswer(gameContainer.sizeY / 2, 50);
@@ -315,11 +313,12 @@ int main(int, char)
 	answerBoxP2.ansBoxLocation(gameContainer.sizeY / 2 - 25, gameContainer.sizeX - 60);
 
 	Answers answers;
+	
 
 	for (;;){
 		Mat image = Mat::zeros(gameContainer.sizeY, gameContainer.sizeX, CV_8UC3);
 		answers.circulate(100, 100);
-		image = gameContainer.image + circles.image + answerBoxP1.image + answerBoxP2.image + answers.image;
+		image = gameContainer.image + answerBoxP1.image + answerBoxP2.image + answers.image;
 		imshow("Gaaame", image);
 		if (waitKey(30) >= 0){
 			break;
