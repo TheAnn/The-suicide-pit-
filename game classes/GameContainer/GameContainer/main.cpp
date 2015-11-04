@@ -13,7 +13,7 @@ using namespace std;
 class GameContainer
 {
 	int tempcollide = 1;
-	int tempSizeX = 1000; // X-size of the gameboard
+	int tempSizeX = 800; // X-size of the gameboard
 	int tempSizeY = 400; // Y-size of the gameboard
 	double tempPlaceX, tempPlaceY; //The placement of objects on the gameboard
 	int tempName; //The id of objects
