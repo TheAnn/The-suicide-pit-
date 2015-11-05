@@ -5,6 +5,8 @@
 #include <ctime>
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <ctime>
+#include <Windows.h>
 
 
 using namespace cv;
@@ -18,12 +20,13 @@ class GameContainer
 	int tempSizeY = image1.rows; // Y-size of the gameboard
 	double tempPlaceX, tempPlaceY; //The placement of objects on the gameboard
 	int tempName; //The id of objects
-	int tempeqState = 1; //The placement of the equation.
+	int tempeqState = 0; //The placement of the equation.
 	int temphandState= 1; //Determines if the hand is open or closed. 0 for closed, 1 for open
 	int temphandPosX = 50; //The X pos of the hand on our game
 	int temphandPosy = 50; ////The Y pos of the hand on our game
 	int tempcircleRadius = 100; //The radius for the circles
 	int tempplayerColor = 1; //The player color determines the players team. 0 for white team and 1 for pink team
+	
 public:
 	int collide = tempcollide;
 	int sizeX = tempSizeX;
@@ -39,6 +42,14 @@ public:
 	int handPosY = temphandPosy;
 	int circleRadius = tempcircleRadius;
 	int playerColor = tempplayerColor;
+	
+
+	//Initializing the unchanging features of the text
+	int fontFace = FONT_HERSHEY_SIMPLEX;
+	int thickness = 3;
+	int baseline = 0;
+	double fontScale = sizeY / 625.0;
+
 };
 
 class Circles : GameContainer{
@@ -57,17 +68,19 @@ public:
 
 class AnswerBox : GameContainer{
 	//Initiate all the variables and construcer in this class
+	double tempboxSize = 90;
 public:
 	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
+	double boxSize = tempboxSize;
 
-	void ansBoxLocation(int, int);
+	void ansBoxLocation(int, int, int, int);
 	void checkAnswer(int, int);
 	void addPoint(int, int);
 	
 };
 
-void AnswerBox::ansBoxLocation(int x, int y){
-	rectangle(image, Point(y, x), Point(y+50, x+50), Scalar(255, 255, 255), 1);
+void AnswerBox::ansBoxLocation(int x, int y, int x1, int y1){
+	rectangle(image, Point(y, x), Point(y1, x1), Scalar(255, 255, 255), 1);
 	
 }
 
@@ -84,11 +97,6 @@ void AnswerBox::checkAnswer(int x, int y){
 }
 
 void AnswerBox::addPoint(int x, int y){
-	//Initializing the unchanging features of the text
-	int fontFace = FONT_HERSHEY_SIMPLEX;
-	double fontScale = 0.7;
-	int thickness = 3;
-	int baseline = 0;
 	//Initialzing the changing features of the text
 	String text = "u win";
 	Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
@@ -100,29 +108,48 @@ class EquationBox : GameContainer{
 	
 	bool tempVisibility = true;
 	int temprNumber1, temprNumber2, temprTempNumber1;
-	int tempyourAnswer, temprealAnswer;
+	int tempyourAnswer;
+	
 	int temprOperator;
 	String tempsolveableEquation;
+
+	int tempwidth;
+	int tempheight;
+	int tempequationSize;
+	int temprealAnswer;
+
+	int y2temp = 100;
+
 public:
 	int rNumber1 = temprNumber1;
 	int rNumber2 = temprNumber2;
 	int rTempNumber1 = temprTempNumber1;
 	int yourAnswer = tempyourAnswer;
-	int realAnswer = temprealAnswer;
+	int y2 = y2temp;
+
 	int rOperator = temprOperator;
+	int realAnswer[3];
+
+	int width = tempwidth;
+	int height = tempheight;
+	int equationSize = tempequationSize;
+	int equations[3];
+
 	String solveableEquation = tempsolveableEquation;
 	bool visibility = tempVisibility;
+	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
 	//Functions
-	void eqLocation();
+	void eqLocation(int, int, int, int, int, int);
 	void pickEquation();
-	void createEquation();
+	void createEquation(int equationSize, int equations[], int fontFace, double fontScale, int thickness, int &baseline, int x, int y, int y2, int width, int height, Mat img);
 };
 
-void EquationBox::eqLocation()
+void EquationBox::eqLocation(int placeY, int placeX, int homeY, int homeX, int enemyY, int enemyX)
 {
 	if (eqState == 0) { //Unpicked state
-		//placeX = homeX //Changes the equations location on the X-axis, to your own equation box
-		//placeY = homeY //Changes the equations location on the Y-axis, to your own equation box
+		createEquation(equationSize, equations, fontFace, fontScale, thickness, baseline, placeX, placeY, width, height, y2, image);
+		//placeX = homeX; //Changes the equations location on the X-axis, to your own equation box
+		//placeY = homeY;//Changes the equations location on the Y-axis, to your own equation box
 		visibility = true; //Determines if the box is visible on the board
 		cout << "State 0 achived. gz \n";
 	}
@@ -147,40 +174,40 @@ void EquationBox::pickEquation(){
 	}
 }
 
-void EquationBox::createEquation(){
-	srand((double)time(NULL));
-	rNumber1 = rand() % 11;
-	rNumber2 = rand() % 11;
-	rOperator = rand() % 2;
+void EquationBox::createEquation(int equationSize, int equations[], int fontFace, double fontScale, int thickness, int &baseline, int x, int y, int y2, int width, int height, Mat img){
+	equationSize = sizeof(equations) / sizeof(*equations);
+	srand(time(NULL));
+	
+	for (int i = 0; i <= equationSize; i++)
+	{
+		rNumber1 = rand() % 11;
+		rNumber2 = rand() % 11;
+		rOperator = rand() % 2;
+		
+		y2 = y;
+		y = y + 50 * i;
+		
+		if (rNumber1 <= rNumber2){
+			rTempNumber1 = rNumber1;
+			rNumber2 = rNumber1;
+			rNumber1 = rTempNumber1;
+		}
 
-	if (rNumber1 <= rNumber2){
-		rTempNumber1 = rNumber1;
-		rNumber2 = rNumber1;
-		rNumber1 = rTempNumber1;
-	}
+		if (rOperator == 0){ //in here goes an equation with subtraction
+			String text = to_string(rNumber1) + "-" + to_string(rNumber2);
+			putText(image, text, Point(x, y), fontFace, fontScale, Scalar::all(255), 1, 8);
+			
+			realAnswer[i] = rNumber1 - rNumber2;
+			cout << "Subtraction of numbers \n";
+		}
+		else if (rOperator == 1){ //In here goes an equation with addition
+			String text = to_string(rNumber1) + "+" + to_string(rNumber2);
+			putText(image, text, Point(x, y), fontFace, fontScale, Scalar::all(255), 1, 8);
 
-	if (rOperator == 1){ //in here goes an equation with subtraction
-		/*cout << "what is " << rNumber1 << "-" << rNumber2 << "?\n";
-		solveableEquation = rNumber1 + rNumber2;
-		realAnswer = rNumber1 - rNumber2;
-		cout << solveableEquation;
-		cin >> yourAnswer;
-		if (realAnswer == yourAnswer)
-		cout << "Correct!";
-		else
-		cout << "u suck";*/
-		cout << "Subtraction of numbers \n";
-	}
-	else{ //In here goes an equation with addition
-		/*cout << "what is " << rNumber1 << "+" << rNumber2 << "?\n";
-		cin >> yourAnswer;
-		realAnswer = rNumber1 + rNumber2;
-
-		if (realAnswer == yourAnswer)
-		cout << "Correct!";
-		else
-		cout << "u suck";*/
-		cout << "Addition of numbers \n";
+			realAnswer[i] = rNumber1 + rNumber2;
+			cout << "Addition of numbers \n";
+		}
+		y = y2;
 	}
 }
 
@@ -207,28 +234,22 @@ public:
 	//void spinningCircles(int, int answers[], int, double, int, int &baseline, double, double, int, double, double, Mat);
 	void singleCircle(int answersSize, int answers[], int fontFace, double fontScale, int thickness, int &baseline, double x, double y, int radius, double angle, double speed, Mat img);
 	void rotate(Mat src, double rotateAngle, Mat dst, int x, int y);
-	void circulate(int, int);
+	void circulate(int, int, int, int, int);
 	void drop();
 	void grab();
 };
 
-void Answers::circulate(int x, int y){
+void Answers::circulate(int x, int y, int ans1, int ans2, int ans3){
 	{
 		//Vari from other classes
 		double radiusOuter = sizeY / 2 - circleRadius*6;
 		double radiusInner = sizeY / 2 - circleRadius*9;
-		int answers[12] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+		int answers[5] = { ans1, ans2, ans3, 4, 5};
 
 		//Declaring the array size, since c++ is stoopid
 		//Also spacing numbers and delcaring start position
 		answersSize = sizeof(answers) / sizeof(*answers);
 		angle = 2 * M_PI / answersSize;
-
-		//Initializing the unchanging features of the text
-		int fontFace = FONT_HERSHEY_SIMPLEX;
-		double fontScale = sizeY / 625.0;
-		int thickness = 3;
-		int baseline = 0;
 		
 		Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
 		image = newImage;
@@ -295,30 +316,50 @@ void Answers::rotate(Mat src, double rotateAngle, Mat dst, int x, int y)
 	warpAffine(src, dst, r, Size(x, y));
 }
 
+
+class MathTimer : GameContainer{
+public:
+	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
+	void startTimer(int y, int x){
+		for (int k = 0; k<11; k++) {
+			String text = to_string(k);
+			Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
+			baseline += thickness;
+			Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
+			image = newImage;;
+			putText(image, text, Point(y - textSize.width / 2, x + textSize.height / 2), fontFace, fontScale, Scalar::all(255), 1, 8);
+			cout << k;
+		}
+	};
+};
+
+
 int main(int, char)
 {
-	
 	GameContainer gameContainer;
 
+	MathTimer mathTimerP1;
+	MathTimer mathTimerP2;
+	
+
 	EquationBox equations;
-	equations.eqLocation();
+	equations.eqLocation(100,50,0,0,0,0);
 	equations.pickEquation();
-	equations.createEquation();
 
 	AnswerBox answerBoxP1;
 	AnswerBox answerBoxP2;
-	answerBoxP1.checkAnswer(gameContainer.sizeY / 2, 50);
-	answerBoxP1.ansBoxLocation(gameContainer.sizeY / 2 - 25, 10);
-	answerBoxP2.checkAnswer(gameContainer.sizeY / 2, gameContainer.sizeX - 50);
-	answerBoxP2.ansBoxLocation(gameContainer.sizeY / 2 - 25, gameContainer.sizeX - 60);
+	answerBoxP1.ansBoxLocation(gameContainer.sizeY / 2 - answerBoxP1.boxSize / 2, gameContainer.sizeX / 32.4, gameContainer.sizeY / 2 + answerBoxP1.boxSize / 2, answerBoxP1.boxSize + gameContainer.sizeX / 32.4);
+	
+	answerBoxP2.ansBoxLocation(gameContainer.sizeY / 2 - answerBoxP1.boxSize / 2, gameContainer.sizeX - gameContainer.sizeX / 32.4 - answerBoxP1.boxSize, gameContainer.sizeY / 2 + answerBoxP1.boxSize / 2, gameContainer.sizeX - gameContainer.sizeX / 32.4);
 
 	Answers answers;
-	
 
 	for (;;){
 		Mat image = Mat::zeros(gameContainer.sizeY, gameContainer.sizeX, CV_8UC3);
-		answers.circulate(100, 100);
-		image = gameContainer.image + answerBoxP1.image + answerBoxP2.image + answers.image;
+		answers.circulate(100, 100, equations.realAnswer[0], equations.realAnswer[1], equations.realAnswer[2]);
+		//mathTimerP1.startTimer(gameContainer.sizeX / 4, gameContainer.sizeY / 4);
+		//mathTimerP2.startTimer(gameContainer.sizeX - gameContainer.sizeX / 4, gameContainer.sizeY - gameContainer.sizeY / 4);
+		image = gameContainer.image + answerBoxP1.image + answerBoxP2.image + answers.image + mathTimerP1.image + mathTimerP2.image + equations.image;
 		imshow("Gaaame", image);
 		if (waitKey(30) >= 0){
 			break;
