@@ -2,26 +2,39 @@
 
 using namespace cv;
 
-Mat field(Mat playField,int x, int y)
+
+int handCol(Mat colFrame, int x,int y)
 {
-	if (x<playField.cols/2)
-		rectangle(playField, Point(30, y), Point(50,y+100), CV_RGB(0, 0, 255), 3);	
-	else 
-		rectangle(playField, Point(450, y), Point(470, y + 100), CV_RGB(0, 0, 255), 3);
+	int color=0;
 
-	imshow("It moves!!!", playField);
+	
+	imshow("rng", colFrame);
+	int blue =colFrame.at<Vec3b>(y,x)[0];
+	int green = colFrame.at<Vec3b>(y, x)[1];
+	int red = colFrame.at<Vec3b>(y, x)[2];
 
-	return playField;
+	if (blue > green)
+		if (blue > red)
+			color = 1;
+		else
+			color = 3;
+	else if (green > red)
+		color = 2;
+	else
+		color = 3;
+
+	std::cout << color << "\n";
+	return color;
 }
 
 int handArea(Mat frame,int xCoor,int yCoor,double height,double width)
 {
-	int area(0);
-	double yMax(yCoor + height-1);
-	double xMax(xCoor + width-1);
-	for (int y(yCoor); y < yMax; y++)
+	int area=0;
+	double yMax=yCoor + height-1;
+	double xMax=xCoor + width-1;
+	for (int y=yCoor; y < yMax; y++)
 	{
-		for (int x(xCoor); x < xMax; x++)
+		for (int x=xCoor; x < xMax; x++)
 		{
 			if (frame.at<unsigned char>(y, x)>0)
 			{
@@ -36,10 +49,10 @@ int handArea(Mat frame,int xCoor,int yCoor,double height,double width)
 
 bool circul(double radius, double size)
 {
-	double cirSize(2*sqrt(3.14*size));
-	double cirPercent(size / cirSize);
-	std::cout <<cirPercent<<" "<< size << " "<<cirSize<<"\n";
-	double precision(18);
+	double cirSize=2*sqrt(3.14*size);
+	double cirPercent=size / cirSize;
+	//std::cout <<cirPercent<<" "<< size << " "<<cirSize<<"\n";
+	double precision=18;
 	if (cirPercent > precision)								//change to increase precision of gesture
 		return true;
 	else
@@ -47,9 +60,9 @@ bool circul(double radius, double size)
 	return false;
 }
 
-Mat contour(Mat frame)
+Mat contour(Mat frame,Mat colFrame)
 {
-	Mat seg(frame.clone());
+	Mat seg=frame.clone();
 
 	Mat result(frame.size(), CV_8U, cv::Scalar(255));
 	std::vector<std::vector<cv::Point>> contours;
@@ -59,9 +72,9 @@ Mat contour(Mat frame)
 		CV_RETR_EXTERNAL, // retrieve the external contours
 		CV_CHAIN_APPROX_NONE); // all pixels of each contours
 	// Eliminate too short or too long contours
-	int cmin(150); // minimum contour length
-	int cmax(550); // maximum contour length
-	int vec(0);
+	int cmin=150; // minimum contour length
+	int cmax=550; // maximum contour length
+	int vec=0;
 	std::vector<std::vector<cv::Point>>::
 		const_iterator itc( contours.begin());
 	while (itc != contours.end())
@@ -75,16 +88,15 @@ Mat contour(Mat frame)
 			rectangle(result, r0, cv::Scalar(0), 2);
 
 			float radius;
-			Point2f center;
+			Point2f center;																//HAND CENTER HERE (x, y)
 			minEnclosingCircle(Mat(contours[vec]), center, radius);
 			circle(result, Point(center),
 				static_cast<int>(radius), cv::Scalar(0), 2);
 			
+			int hColor = handCol(colFrame, center.x, center.y);
+			int hArea=handArea(seg, r0.x, r0.y, r0.height, r0.width);
 			
-			//std::cout << " " << r0.x << " " << r0.y << " " << r0.height << " " << r0.width << "\n";
-			int hArea(handArea(seg, r0.x, r0.y, r0.height, r0.width));
-			
-			bool handState(circul(radius, hArea));
+			bool handState=circul(radius, hArea);										//HAND STATE HERE
 			if (handState)
 			{
 				rectangle(seg, Point(0,0), Point(100,100), CV_RGB(0, 0, 255), 3);
@@ -103,7 +115,8 @@ Mat contour(Mat frame)
 	}
 
 	// Draw black contours on a white image
-	imshow("BW", seg);
+	//imshow("Original", colFrame);
+	//imshow("Segmented", seg);
 	drawContours(result, contours,
 		-1, // draw all contours
 		cv::Scalar(0), // in black
@@ -127,14 +140,15 @@ int main(int, char)
 		Mat frame;
 
 		cap >> frame; // get a new frame from camera
-		Mat colorFrame(frame.clone());
-		cvtColor(frame, frame, CV_RGB2GRAY);
+		Mat colFrame=frame.clone();
 
+		cvtColor(frame, frame, CV_RGB2GRAY);
+		
 		subtract(frame, BG, frame, noArray(), -1); //subtract foreground from background
 		medianBlur(frame, frame, 5); //apply blur
 		threshold(frame, frame, 30, 255, CV_THRESH_BINARY); // threshold the image 
 
-		Mat result(contour(frame));
+		Mat result(contour(frame,colFrame));
 		imshow("Frame", result);
 		if (waitKey(30) >= 0)
 			break;
