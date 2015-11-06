@@ -68,7 +68,7 @@ public:
 
 class AnswerBox : GameContainer{
 	//Initiate all the variables and construcer in this class
-	double tempboxSize = 90;
+	double tempboxSize = 648/7.2;
 public:
 	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
 	double boxSize = tempboxSize;
@@ -293,12 +293,10 @@ void Answers::singleCircle(int answersSize, int answers[], int fontFace, double 
 }
 
 void Answers::drop(){
-	if (holding == true)
-	{
-		//if (collide != objectID) //Checks if the collide function stopped returning an object ID
+	//if (collide != objectID){ //Checks if the collide function stopped returning an object ID
 		//checkAnswer(); // Runs the checkAnswer function to see if the object is within the answer box.
 		holding = false;
-	}
+	//}
 }
 
 void Answers::grab(){
