@@ -59,7 +59,6 @@ void CallBackFunc(int event, int mouseX, int mouseY, int flags, void* userdata)
 			cout << "now!";
 			x = mouseX;
 			y = mouseY;
-			circleRadius = 100;
 		}
 
 		//Creating the numbers to be shown
