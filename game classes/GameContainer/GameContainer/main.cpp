@@ -14,7 +14,7 @@ using namespace std;
 
 class GameContainer
 {
-	Mat image1 = imread("C:/images/mathers.png", 1);
+	Mat image1 = Mat::zeros(400,1000, CV_8UC3);
 	int tempcollide = 1;
 	int tempSizeX = image1.cols; // X-size of the gameboard
 	int tempSizeY = image1.rows; // Y-size of the gameboard
@@ -32,8 +32,7 @@ public:
 	int sizeX = tempSizeX;
 	int sizeY = tempSizeY;
 	int name = tempName;
-	Mat image = imread("C:/images/mathers.png", 1);
-	//Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
+	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
 	double placeX = tempPlaceX;
 	double placeY = tempPlaceY;	
 	int eqState = tempeqState;
@@ -168,13 +167,13 @@ public:
 	//Functions
 	void eqLocation(int, int, int, int, int, int, int);
 	void pickEquation();
-	void createEquation(int, int equationSize, String equations[], int fontFace, double fontScale, int thickness, int &baseline, int x, int y, int y2, int width, int height, Mat img);
+	void createEquation(int, int, int x, int y, int y2, Mat img);
 };
 
 void EquationBox::eqLocation(int eqStart, int placeY, int placeX, int homeY, int homeX, int enemyY, int enemyX)
 {
-	equationSize = sizeof(equations) / sizeof(*equations);
-	createEquation(eqStart, equationSize / 2, equations, fontFace, fontScale, thickness, baseline, placeX, placeY, width, height, y2, image);
+	
+	createEquation(eqStart, equationSize / 2, placeX, placeY, y2, image);
 	
 	for (int i = 0; i < equationSize; i++)
 	{
@@ -207,18 +206,19 @@ void EquationBox::pickEquation(){
 	}
 }
 
-void EquationBox::createEquation(int i,  int equationSize, String equations[], int fontFace, double fontScale, int thickness, int &baseline, int x, int y, int y2, int width, int height, Mat img){
-
+void EquationBox::createEquation(int i,  int equationSizes, int x, int y, int y2, Mat img){
+	
+	equationSize = sizeof(equations) / sizeof(*equations);
 	srand(time(NULL)+i);
 	
 	int eqStart = 0;
 	eqStart = i;
 	
 
-	for (i; i < equationSize + eqStart; i++)
+	for (i; i < equationSize/2 + eqStart; i++)
 	{
-		rNumber1 = rand() % 11;
-		rNumber2 = rand() % 11;
+		rNumber1 = rand() % 10;
+		rNumber2 = rand() % 10;
 		rOperator = rand() % 2;
 		
 		y2 = y;
@@ -231,18 +231,27 @@ void EquationBox::createEquation(int i,  int equationSize, String equations[], i
 			rNumber1 = rTempNumber1;
 		}
 
-		if (rOperator == 0){ //in here goes an equation with subtraction
+		if (rOperator == 0){ //in here goes an equation with subtraction	
 			equations[i] = to_string(rNumber1) + "-" + to_string(rNumber2);
-			putText(image, equations[i], Point(x, y), fontFace, fontScale, Scalar::all(255), 1, 8);
-			
+			String text = equations[i];
+			Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
+			baseline += thickness;
+			putText(image, text, Point(x, y), fontFace, fontScale, Scalar::all(255), 1, 8);
+			rectangle(image, Point(x - 5, y + 5), Point(x + textSize.width + 5, y - textSize.height - 5), Scalar::all(255), 1);
 			realAnswer[i] = rNumber1 - rNumber2;
 		}
 		else if (rOperator == 1){ //In here goes an equation with addition
 			equations[i] = to_string(rNumber1) + "+" + to_string(rNumber2);
-			putText(image, equations[i], Point(x, y), fontFace, fontScale, Scalar::all(255), 1, 8);
+			String text = equations[i];
+			Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
+			baseline += thickness;
+			putText(image, text, Point(x, y), fontFace, fontScale, Scalar::all(255), 1, 8);
+			rectangle(image, Point(x - 5, y + 5), Point(x + textSize.width + 5, y - textSize.height - 5), Scalar::all(255), 1);
+			putText(image, text, Point(x, y), fontFace, fontScale, Scalar::all(255), 1, 8);
 
 			realAnswer[i] = rNumber1 + rNumber2;
 		}
+		
 		y = y2;
 	}
 }
@@ -332,9 +341,6 @@ void Answers::circulate(int x, int y){
 			answersOuter[i] = answers[i + answersSize / 2];
 		}
 		
-		
-		
-		
 		Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
 		image = newImage;
 
@@ -402,19 +408,26 @@ void Answers::rotate(Mat src, double rotateAngle, Mat dst, int x, int y)
 
 class MathTimer : GameContainer{
 public:
+	clock_t init, final;
+	int printin = 0;
+	
+
 	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
+	void setTimer(){ init = clock(); }
+
 	void startTimer(int y, int x){
-		for (int k = 0; k<11; k++) {
-			String text = to_string(k);
-			Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
-			baseline += thickness;
-			Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
-			image = newImage;;
-			putText(image, text, Point(y - textSize.width / 2, x + textSize.height / 2), fontFace, fontScale, Scalar::all(255), 1, 8);
-			cout << k;
-		}
-	};
+		Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
+		image = newImage;
+		cout << printin;
+		String text = to_string(printin);
+		putText(newImage, text, Point(y, x), fontFace, fontScale, Scalar::all(255), 1);
+		if (printin >= 10)
+			putText(newImage, "wow", Point(250, 300), fontFace, fontScale, Scalar::all(255), 1);
+		final = clock() - init;
+		printin = final / (CLOCKS_PER_SEC);
+	}
 };
+
 
 
 int main(int, char)
@@ -423,12 +436,14 @@ int main(int, char)
 
 	MathTimer mathTimerP1;
 	MathTimer mathTimerP2;
+	mathTimerP1.setTimer();
+	
 	
 
 	EquationBox equationsP1;
 	EquationBox equationsP2;
 	equationsP1.eqLocation(0, gameContainer.sizeY / 1.4, gameContainer.sizeX / 20, 0, 0, 0, 0);
-	equationsP2.eqLocation(3, gameContainer.sizeY / 1.4, 550, 0, 0, 0, 0);
+	equationsP2.eqLocation(3, gameContainer.sizeY / 1.4, gameContainer.sizeX / 1.1, 0, 0, 0, 0);
 	equationsP1.pickEquation();
 
 	AnswerBox answerBoxP1;
@@ -442,16 +457,15 @@ int main(int, char)
 		answerBoxP1.ansBoxLocation(gameContainer.sizeY / 2 - answerBoxP1.boxSize / 2, gameContainer.sizeX / 32.4);
 		answerBoxP2.ansBoxLocation(gameContainer.sizeY / 2 - answerBoxP1.boxSize / 2, gameContainer.sizeX - gameContainer.sizeX / 32.4 - answerBoxP1.boxSize);
 
-
-
 		Mat image = Mat::zeros(gameContainer.sizeY, gameContainer.sizeX, CV_8UC3);
+		mathTimerP1.startTimer(120,385);
 		answers.circulate(100, 100);
-		//mathTimerP1.startTimer(gameContainer.sizeX / 4, gameContainer.sizeY / 4);
+		//mathTimerP1.startTimer();
 		//mathTimerP2.startTimer(gameContainer.sizeX - gameContainer.sizeX / 4, gameContainer.sizeY - gameContainer.sizeY / 4);
 		image = gameContainer.image + answerBoxP1.image + answerBoxP2.image + answers.image + mathTimerP1.image + mathTimerP2.image + equationsP1.image + equationsP2.image;
 		imshow("Gaaame", image);
-		//if (waitKey(30) >= 0)
-			//break;
-		waitKey(0);
+		if (waitKey(30) >= 0)
+			break;
+
 	}
 }
