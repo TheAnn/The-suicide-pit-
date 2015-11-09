@@ -14,7 +14,7 @@ using namespace std;
 
 class GameContainer
 {
-	Mat image1 = Mat::zeros(400,1000, CV_8UC3);
+	Mat image1 = Mat::zeros(500,800, CV_8UC3);
 	int tempcollide = 1;
 	int tempSizeX = image1.cols; // X-size of the gameboard
 	int tempSizeY = image1.rows; // Y-size of the gameboard
@@ -28,7 +28,6 @@ class GameContainer
 	int tempplayerColor = 1; //The player color determines the players team. 0 for white team and 1 for pink team
 	
 public:
-	int collide = tempcollide;
 	int sizeX = tempSizeX;
 	int sizeY = tempSizeY;
 	int name = tempName;
@@ -48,6 +47,23 @@ public:
 	int thickness = 3;
 	int baseline = 0;
 	double fontScale = sizeY / 625.0;
+
+	void collide(Point hCenter, int i, int x,  int y){
+			if (x + circleRadius > hCenter.x && y + circleRadius > hCenter.y && x - circleRadius < hCenter.x && y - circleRadius < hCenter.y){
+				cout << "now";
+				x = hCenter.x;
+				y = hCenter.y;
+		}
+	}
+
+	void uNumber(int i, int x, int y){
+		name = i * 2 + 1;
+		placeX = x;
+		placeY = y;
+	}
+	void eNunbers(){
+
+	}
 
 };
 
@@ -82,33 +98,31 @@ public:
 	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
 	double boxSize = tempboxSize;
 
-	void ansBoxLocation(int, int);
-	void checkAnswer(int, int);
+	void ansBoxLocation(int, int, int, int, int yourAnswer[], int realAnswer[]);
+	void checkAnswer(int, int, int, int, int yourAnswer[], int realAnswer[]);
 	void addPoint(int, int);
 	
 };
 
-void AnswerBox::ansBoxLocation(int x, int y){
-	
+void AnswerBox::ansBoxLocation(int x, int y, int objX, int objY, int yourAnswer[], int realAnswer[]){
 	rectangle(image, Point(y, x), Point(y + boxSize, x + boxSize), Scalar(b, g, r), fill);
-	checkAnswer(x, y);
-	
+	checkAnswer(x, y, objX, objY, yourAnswer, realAnswer);
 }
 
-void AnswerBox::checkAnswer(int x, int y){
-	int objIDX;
-	int objIDY;
-	//if (objIDX > y && objIDY > x && objIDX < y && objIDY < x){
+void AnswerBox::checkAnswer(int x, int y, int objX, int objY, int yourAnswer[], int realAnswer[]){
+	cout << objX << " pick me \n";
+	if (objX > y && objY > x && objX < y + boxSize && objY < x + boxSize){
 		//if (yourAnswer == realAnswer){
-			//r = 0;
-			//b = 0;
-			//fill = -1;
+			r = 0;
+			b = 0;
+			fill = -1;
 			addPoint(x, y);
-		//} else
+			//} else
 			//g = 0;
 			//b = 0;
 			//fill = -1;
-	//}
+		//}
+	}
 }
 
 void AnswerBox::addPoint(int x, int y){
@@ -155,11 +169,12 @@ public:
 
 	int rOperator = temprOperator;
 	int realAnswer[6];
+	String equations[6];
 
 	int width = tempwidth;
 	int height = tempheight;
 	int equationSize = tempequationSize;
-	String equations[6];
+	
 
 	String solveableEquation = tempsolveableEquation;
 	bool visibility = tempVisibility;
@@ -200,10 +215,10 @@ void EquationBox::eqLocation(int eqStart, int placeY, int placeX, int homeY, int
 }
 
 void EquationBox::pickEquation(){
-	if (collide % 2 == 0){
+	//if (collide % 2 == 0){
 		//if (hand.pColor == eq.pColor) //Checks if the color on the hand picking and the equation adds up
-		eqState = 2;
-	}
+		//eqState = 2;
+	//}
 }
 
 void EquationBox::createEquation(int i,  int equationSizes, int x, int y, int y2, Mat img){
@@ -216,7 +231,7 @@ void EquationBox::createEquation(int i,  int equationSizes, int x, int y, int y2
 	
 
 	for (i; i < equationSize/2 + eqStart; i++)
-	{
+	{ //Hej søde Stefan! :D Du er dygtig og tak for hjælpen! :)
 		rNumber1 = rand() % 10;
 		rNumber2 = rand() % 10;
 		rOperator = rand() % 2;
@@ -266,11 +281,9 @@ class Answers : GameContainer{
 	int tempanswersSize;
 	double circleRadius = sizeY / 31.25;
 	int temprNumber;
-	bool tempholding; //This bool should be taken from the grab() function
 	int tempequationSize;
 public:
 	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
-	bool holding = tempholding; //This bool should be taken from the grab() function
 	double x = tempx;
 	double y = tempy;
 	double angle = tempangle;
@@ -282,14 +295,15 @@ public:
 	int rNumber = temprNumber;
 	int answers[10];
 	int tempArray[10];
-
+	bool holding[10];
+	int eqStart = 0;
 
 	
 	//void spinningCircles(int, int answers[], int, double, int, int &baseline, double, double, int, double, double, Mat);
-	void singleCircle(int answersSize, int answers[], int fontFace, double fontScale, int thickness, int &baseline, double x, double y, int radius, double angle, double speed, Mat img);
+	void singleCircle(int, int answers[], int radius, double speed, Point hCenter);
 	void rotate(Mat src, double rotateAngle, Mat dst, int x, int y);
 	void numberGenerator(int equationsP1[], int equationsP2[]);
-	void circulate(int, int);
+	void circulate(int, int, Point);
 	void drop();
 	void grab();
 
@@ -300,7 +314,7 @@ void Answers::numberGenerator(int equationsP1[], int equationsP2[]){
 	equationSize = 6;
 
 	answersSize = sizeof(answers) / sizeof(*answers);
-	for (int i = 0; i < equationSize / 2; i++)
+	for (int i = 0; i < equationSize/2; i++)
 	{
 		answers[i] = equationsP1[i];
 		answers[i + equationSize / 2] = equationsP2[i + equationSize / 2];
@@ -314,14 +328,13 @@ void Answers::numberGenerator(int equationsP1[], int equationsP2[]){
 
 	for (int i = 0; i < answersSize; i++){
 		rNumber = rand() % 10;
-		cout << rNumber;
 		tempArray[i] = answers[i];
 		answers[i] = answers[rNumber];
 		answers[rNumber] = tempArray[i];
 	}
 }
 
-void Answers::circulate(int x, int y){
+void Answers::circulate(int x, int y, Point hCenter){
 	{
 		//Vari from other classes
 		double radiusOuter = sizeY / 2 - circleRadius*6;
@@ -329,18 +342,7 @@ void Answers::circulate(int x, int y){
 		
 		answersSize = sizeof(answers) / sizeof(*answers);
 
-		int answersInner[5];
-		int answersOuter[5];
-		//Declaring the array size, since c++ is stoopid
-		//Also spacing numbers and delcaring start position
-		
-
-		for (int i = 0; i < answersSize / 2; i++)
-		{
-			answersInner[i] = answers[i];
-			answersOuter[i] = answers[i + answersSize / 2];
-		}
-		
+	
 		Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
 		image = newImage;
 
@@ -349,20 +351,22 @@ void Answers::circulate(int x, int y){
 		rotateSpeed += 2.8;
 
 		//The inner circle
-		singleCircle(answersSize/2, answersInner, fontFace, fontScale, thickness, baseline, x, y, radiusInner, angle, speedRight, image);
+		singleCircle(0, answers, radiusInner, speedRight, hCenter);
 
 		//The outer circle
-		singleCircle(answersSize/2, answersOuter, fontFace, fontScale, thickness, baseline, x, y, radiusOuter, angle, speedLeft, image);
+		singleCircle(5, answers, radiusOuter, speedLeft, hCenter);
 		
 	}
 }
 
-void Answers::singleCircle(int answersSize, int answers[], int fontFace, double fontScale, int thickness, int &baseline, double x, double y, int radius, double angle, double speed, Mat img){
-	for (int i = 0; i < answersSize; i++)
+void Answers::singleCircle(int i, int ans[], int radius, double speed, Point hCenter){
+	angle = 2 * M_PI / (answersSize/2);
+	eqStart = i; 
+	
+	for (i + eqStart; i < answersSize / 2 + eqStart; i++)
 	{
-		angle = 2 * M_PI / answersSize;
 		//Initialzing the changing features inside the circle, such as text and position
-		String text = to_string(answers[i]);
+		String text = to_string(ans[i]);
 		Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
 		baseline += thickness;
 
@@ -370,8 +374,16 @@ void Answers::singleCircle(int answersSize, int answers[], int fontFace, double 
 		//Mat textImg = Mat::zeros(image.rows, image.cols, image.type());
 
 		//Declaring the position of the answer
-		x = radius*sin(angle * i + speed) + sizeX / 2;
-		y = radius*cos(angle * i + speed) + sizeY / 2;
+			x = radius*sin(angle * i + speed) + sizeX / 2;
+			y = radius*cos(angle * i + speed) + sizeY / 2;
+
+			if (x + circleRadius > hCenter.x && y + circleRadius > hCenter.y && x - circleRadius < hCenter.x && y - circleRadius < hCenter.y){
+				holding[i] = true;
+			}
+			if (holding[i]){
+				x = hCenter.x;
+				y = hCenter.y;
+			}
 		Point answerPos(x, y);
 
 		//Creating the numbers to be shown
@@ -386,16 +398,16 @@ void Answers::singleCircle(int answersSize, int answers[], int fontFace, double 
 void Answers::drop(){
 	//if (collide != objectID){ //Checks if the collide function stopped returning an object ID
 		//checkAnswer(); // Runs the checkAnswer function to see if the object is within the answer box.
-		holding = false;
+		
 	//}
 }
 
 void Answers::grab(){
-	if (collide % 2 == 1){
+	//if (collide % 2 == 1){
 		//id.answer.posX = hand.x
 		//id.answer.posY = hand.y
-		holding = true;
-	}
+		//holding = true;
+	//}
 }
 
 
@@ -410,7 +422,6 @@ class MathTimer : GameContainer{
 public:
 	clock_t init, final;
 	int printin = 0;
-	
 
 	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
 	void setTimer(){ init = clock(); }
@@ -418,7 +429,6 @@ public:
 	void startTimer(int y, int x){
 		Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
 		image = newImage;
-		cout << printin;
 		String text = to_string(printin);
 		putText(newImage, text, Point(y, x), fontFace, fontScale, Scalar::all(255), 1);
 		if (printin >= 10)
@@ -428,18 +438,170 @@ public:
 	}
 };
 
+class ImageProcessing : GameContainer
+{
+public:
+	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
+	Point2f center;
+	void thresholding()
+	{
+		cvtColor(frame, gray_frame, CV_RGB2GRAY);
+		subtract(gray_frame, background, subtracted, noArray(), -1);
+		medianBlur(subtracted, subtracted, 5);
+		threshold(subtracted, thresholded, 30, 255, CV_THRESH_BINARY);
+
+	}
+	void contour()																			//find the external contours 
+	{
+		contour_frame = thresholded.clone();
+		findContours(contour_frame,
+			contours,
+			CV_RETR_EXTERNAL,
+			CV_CHAIN_APPROX_NONE);
+	}
+	void eliminteContours()																	//eliminate too short or too long contours and extract data from the rest
+	{																						//Add more conditions to the if/else statement to remove noise
+		std::vector<std::vector<cv::Point>>::
+			const_iterator itc(contours.begin());
+		int vec = 0;
+		while (itc != contours.end())
+		{
+			if (itc->size() < min_contour || itc->size() > max_contour)
+				itc = contours.erase(itc);
+			else
+			{
+				Rect r0(boundingRect(cv::Mat(contours[vec])));
+				minEnclosingCircle(Mat(contours[vec]), center, radius);
+				blob_perimeter = contours.size();
+				blobArea();
+				circularity();
+				blobColor();
+				blobState();
+				gameCode();
+				draw();
+				++vec;
+				++itc;
+			}
+		}
+	}
+
+
+	void blobArea()																			//caculate area of the blob
+	{
+		double yMax = rec_y + rec_height - 1;
+		double xMax = rec_x + rec_width - 1;
+		blob_area = 0;
+		for (int y = rec_y; y < yMax; y++)
+		{
+			for (int x = rec_x; x < xMax; x++)
+			{
+				if (frame.at<unsigned char>(y, x)>0)
+				{
+					blob_area++;
+
+				}
+			}
+		}
+	}
+
+	void circularity()																		//calculate the circularity of the blob
+	{
+		blob_sqrt_area = 2 * sqrt(3.14*blob_area);
+		blob_circularity = blob_perimeter / blob_sqrt_area;
+	}
+
+	void blobColor()																		//find the color of the blob 1-blue, 2-green, 3-red
+	{
+		int blue = frame.at<Vec3b>(center.y, center.x)[0];
+		int green = frame.at<Vec3b>(center.y, center.x)[1];
+		int red = frame.at<Vec3b>(center.y, center.x)[2];
+
+		if (blue > green)
+			if (blue > red)
+				blob_color = 1;
+			else
+				blob_color = 3;
+		else if (green > red)
+			blob_color = 2;
+		else
+			blob_color = 3;
+
+	}
+
+	void blobState()																		//get the state of the blob
+	{
+		if (blob_circularity > blob_circularity_precision)
+			blob_state = 1;
+		else
+			blob_state = 2;
+	}
+
+	void gameCode()																			//Put game Code
+	{
+		//std::cout << blob_color << "\n";
+		//std::cout << center.x << " " << center.y << "\n";
+		//std::cout << blob_circularity << "\n";
+		//std::cout << "\n";
+		//std::cout << "\n";
+	}
+	void draw()																				//Draw contours
+	{
+		Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
+		image = newImage;
+		if (blob_state == 1)
+			rectangle(newImage, center, Point(center.x + 1, center.y + 1), CV_RGB(255, 0, 0), 10);
+		else
+			rectangle(newImage, center, Point(center.x + 1, center.y + 1), CV_RGB(0, 0, 255), 10);
+		//drawContours(result, contours,
+		//	-1,
+		//	cv::Scalar(0),
+		//	1);
+	}
+
+	Mat frame,
+		background,
+		thresholded,
+		gray_frame,
+		subtracted,
+		contour_frame;
+	
+	std::vector<std::vector<cv::Point>> contours;
+	int min_contour = 100,																	//Minimum size of the contour to be counted as objet of interest
+		max_contour = 600,																	//Maximum size of the contour to be counted as objet of interest
+		blob_area,
+		blob_color,
+		blob_state;
+	float radius;
+	double rec_y,
+		rec_x,
+		rec_height,
+		rec_width,
+		blob_perimeter,
+		blob_sqrt_area,
+		blob_circularity,
+		blob_circularity_precision = 19;													//Circularity threshold, determine state/gesture
+};
+
+
 
 
 int main(int, char)
 {
+	ImageProcessing IPGod;
+	VideoCapture cap(0);
+	if (!cap.isOpened()){
+		return -1;
+		std::cout << "Not found";
+	}
+	cap >> IPGod.background;
+	cvtColor(IPGod.background, IPGod.background, CV_RGB2GRAY);
+
 	GameContainer gameContainer;
 
 	MathTimer mathTimerP1;
 	MathTimer mathTimerP2;
 	mathTimerP1.setTimer();
 	
-	
-
 	EquationBox equationsP1;
 	EquationBox equationsP2;
 	equationsP1.eqLocation(0, gameContainer.sizeY / 1.4, gameContainer.sizeX / 20, 0, 0, 0, 0);
@@ -449,20 +611,27 @@ int main(int, char)
 	AnswerBox answerBoxP1;
 	AnswerBox answerBoxP2;
 
-	
+	Circles circles;
+	circles.createCircles();
+
 	Answers answers;
 	answers.numberGenerator(equationsP1.realAnswer, equationsP2.realAnswer);
 
 	for (;;){
-		answerBoxP1.ansBoxLocation(gameContainer.sizeY / 2 - answerBoxP1.boxSize / 2, gameContainer.sizeX / 32.4);
-		answerBoxP2.ansBoxLocation(gameContainer.sizeY / 2 - answerBoxP1.boxSize / 2, gameContainer.sizeX - gameContainer.sizeX / 32.4 - answerBoxP1.boxSize);
+		cap >> IPGod.frame;
+		IPGod.thresholding();
+		IPGod.contour();
+		IPGod.eliminteContours();
+
+		answerBoxP1.ansBoxLocation(gameContainer.sizeY / 2 - answerBoxP1.boxSize / 2, gameContainer.sizeX / 32.4, answers.x, answers.y, answers.answers, equationsP1.realAnswer);
+		//answerBoxP2.ansBoxLocation(gameContainer.sizeY / 2 - answerBoxP1.boxSize / 2, gameContainer.sizeX - gameContainer.sizeX / 32.4 - answerBoxP1.boxSize);
 
 		Mat image = Mat::zeros(gameContainer.sizeY, gameContainer.sizeX, CV_8UC3);
 		mathTimerP1.startTimer(120,385);
-		answers.circulate(100, 100);
+		answers.circulate(100, 100, IPGod.center);
 		//mathTimerP1.startTimer();
 		//mathTimerP2.startTimer(gameContainer.sizeX - gameContainer.sizeX / 4, gameContainer.sizeY - gameContainer.sizeY / 4);
-		image = gameContainer.image + answerBoxP1.image + answerBoxP2.image + answers.image + mathTimerP1.image + mathTimerP2.image + equationsP1.image + equationsP2.image;
+		image = gameContainer.image + answerBoxP1.image + answerBoxP2.image + answers.image + mathTimerP1.image + mathTimerP2.image + equationsP1.image + equationsP2.image + circles.image + IPGod.image;
 		imshow("Gaaame", image);
 		if (waitKey(30) >= 0)
 			break;
