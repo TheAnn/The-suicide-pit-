@@ -47,15 +47,23 @@ public:
 				Rect r0(boundingRect(cv::Mat(contours[vec])));
 				minEnclosingCircle(Mat(contours[vec]), center, radius);
 
+				rec_x = r0.x;
+				rec_y = r0.y;
+				rec_height = r0.height;
+				rec_width = r0.width;
 				blob_perimeter = contours.size();
 				blobArea();
-				circularity();
-				blobColor();
-				blobState();
-				gameCode();
-				draw();
-				++vec;
-				++itc;
+				if (blob_area < 2200||blob_area>6000)
+					itc = contours.erase(itc);
+				else{
+					circularity();
+					blobColor();
+					blobState();
+					gameCode();
+					draw();
+					++vec;
+					++itc;
+				}
 			}
 		}
 	}
@@ -65,12 +73,12 @@ public:
 	{
 		double yMax = rec_y + rec_height - 1;
 		double xMax = rec_x + rec_width - 1;
-		blob_area = 0;
+		blob_area = 1;
 		for (int y = rec_y; y < yMax; y++)
 		{
 			for (int x = rec_x; x < xMax; x++)
 			{
-				if (frame.at<unsigned char>(y, x)>0)
+				if (thresholded.at<unsigned char>(y, x)>0)
 				{
 					blob_area++;
 
@@ -80,9 +88,9 @@ public:
 	}
 
 	void circularity()																		//calculate the circularity of the blob
-	{	
+	{
 		blob_sqrt_area = 2 * sqrt(3.14*blob_area);
-		blob_circularity = blob_perimeter / blob_sqrt_area;						
+		blob_circularity = blob_perimeter / blob_sqrt_area;
 	}
 
 	void blobColor()																		//find the color of the blob 1-blue, 2-green, 3-red
@@ -113,9 +121,8 @@ public:
 
 	void gameCode()																			//Put game Code
 	{
-		std::cout << blob_color<< "\n";
-		std::cout << center.x<<" "<<center.y<< "\n";
-		std::cout << blob_circularity<< "\n";
+		std::cout << blob_area<< "\n";
+		std::cout << blob_circularity << "\n";
 		std::cout << "\n";
 		std::cout << "\n";
 	}
@@ -132,6 +139,7 @@ public:
 			cv::Scalar(0), 
 			1);
 		imshow("Result", result);
+		
 	}
 
 	Mat frame,
@@ -143,7 +151,7 @@ public:
 	Point2f center;
 	std::vector<std::vector<cv::Point>> contours;
 	int min_contour=100,																	//Minimum size of the contour to be counted as objet of interest
-		max_contour=1600,																	//Maximum size of the contour to be counted as objet of interest
+		max_contour=600,																	//Maximum size of the contour to be counted as objet of interest
 		blob_area,
 		blob_color,
 		blob_state;
@@ -155,7 +163,7 @@ public:
 		   blob_perimeter, 
 		   blob_sqrt_area, 
 		   blob_circularity,
-		   blob_circularity_precision=19;													//Circularity threshold, determine state/gesture
+		   blob_circularity_precision=0.005;													//Circularity threshold, determine state/gesture
 
 
 
