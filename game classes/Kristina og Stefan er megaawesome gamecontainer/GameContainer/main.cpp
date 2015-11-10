@@ -13,7 +13,7 @@ using namespace std;
 
 class GameContainer
 {
-	Mat image1 = Mat::zeros(500,800, CV_8UC3);
+	Mat image1 = Mat::zeros(480,640, CV_8UC3);
 	int tempcollide = 1;
 	int tempSizeX = image1.cols; // X-size of the gameboard
 	int tempSizeY = image1.rows; // Y-size of the gameboard
@@ -512,12 +512,13 @@ public:
 	}
 	void draw()																				//Draw contours
 	{
+		imshow("SHOWS", frame);
 		Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
 		image = newImage;
 		if (blob_state == 1)
-			rectangle(result, center, Point(center.x + 1, center.y + 1), CV_RGB(255, 0, 0), 10);
+			rectangle(image, center, Point(center.x + 1, center.y + 1), CV_RGB(255, 0, 0), 10);
 		else
-			rectangle(result, center, Point(center.x + 1, center.y + 1), CV_RGB(0, 0, 255), 10);
+			rectangle(image, center, Point(center.x + 1, center.y + 1), CV_RGB(0, 0, 255), 10);
 
 
 	}
@@ -528,7 +529,6 @@ public:
 		gray_frame,
 		subtracted,
 		contour_frame;
-	Point2f center;
 	std::vector<std::vector<cv::Point>> contours;
 	int min_contour = 100,																	//Minimum size of the contour to be counted as objet of interest
 		max_contour = 600,																	//Maximum size of the contour to be counted as objet of interest
@@ -552,7 +552,7 @@ public:
 int main(int, char)
 {
 	ImageProcessing IPGod;
-	VideoCapture cap(0);
+	VideoCapture cap(1);
 	if (!cap.isOpened()){
 		return -1;
 		std::cout << "Not found";
