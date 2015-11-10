@@ -1,13 +1,12 @@
+#define _USE_MATH_DEFINES
 #include "opencv2/opencv.hpp"
 #include <iostream>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <ctime>
-#define _USE_MATH_DEFINES
 #include <math.h>
 #include <ctime>
 #include <Windows.h>
-
 
 using namespace cv;
 using namespace std;
@@ -122,6 +121,7 @@ void AnswerBox::checkAnswer(int y, int x, double objX[], double objY[], bool pos
 				}
 				if (yourAnswer[i] != realAnswer[player]){
 					g = 0;
+
 					b = 0;
 					fill = -1;
 				}
@@ -247,7 +247,6 @@ void EquationBox::createEquation(int i,  int equationSizes, int x, int y, int y2
 	rectangle(image, Point(x - 5, y + 5), Point(x + textSize.width + 5, y - textSize.height - 5), Scalar::all(255), 1);
 }
 
-
 class Answers : GameContainer{
 	double tempangle;
 	double tempspeedRight = 0;
@@ -371,13 +370,11 @@ void Answers::singleCircle(int i, int ans[], int radius, double speed, Point hCe
 	}
 }
 
-
 void Answers::rotate(Mat src, double rotateAngle, Mat dst, int x, int y)
 {
 	Mat r = cv::getRotationMatrix2D(Point(x, y), rotateAngle, 1.0);
 	warpAffine(src, dst, r, Size(x, y));
 }
-
 
 class MathTimer : GameContainer{
 public:
@@ -404,9 +401,11 @@ class ImageProcessing : GameContainer
 public:
 	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
 	Point2f center;
+
 	void thresholding()
 	{
 		cvtColor(frame, gray_frame, CV_RGB2GRAY);
+
 		subtract(gray_frame, background, subtracted, noArray(), -1);
 		medianBlur(subtracted, subtracted, 5);
 		threshold(subtracted, thresholded, 30, 255, CV_THRESH_BINARY);
@@ -419,6 +418,8 @@ public:
 			contours,
 			CV_RETR_EXTERNAL,
 			CV_CHAIN_APPROX_NONE);
+
+
 	}
 	void eliminteContours()																	//eliminate too short or too long contours and extract data from the rest
 	{																						//Add more conditions to the if/else statement to remove noise
@@ -433,15 +434,24 @@ public:
 			{
 				Rect r0(boundingRect(cv::Mat(contours[vec])));
 				minEnclosingCircle(Mat(contours[vec]), center, radius);
+
+				rec_x = r0.x;
+				rec_y = r0.y;
+				rec_height = r0.height;
+				rec_width = r0.width;
 				blob_perimeter = contours.size();
 				blobArea();
-				circularity();
-				blobColor();
-				blobState();
-				gameCode();
-				draw();
-				++vec;
-				++itc;
+				if (blob_area < 2200 || blob_area>6000)
+					itc = contours.erase(itc);
+				else{
+					circularity();
+					blobColor();
+					blobState();
+					gameCode();
+					draw();
+					++vec;
+					++itc;
+				}
 			}
 		}
 	}
@@ -451,12 +461,12 @@ public:
 	{
 		double yMax = rec_y + rec_height - 1;
 		double xMax = rec_x + rec_width - 1;
-		blob_area = 0;
+		blob_area = 1;
 		for (int y = rec_y; y < yMax; y++)
 		{
 			for (int x = rec_x; x < xMax; x++)
 			{
-				if (frame.at<unsigned char>(y, x)>0)
+				if (thresholded.at<unsigned char>(y, x)>0)
 				{
 					blob_area++;
 
@@ -499,24 +509,17 @@ public:
 
 	void gameCode()																			//Put game Code
 	{
-		//std::cout << blob_color << "\n";
-		//std::cout << center.x << " " << center.y << "\n";
-		//std::cout << blob_circularity << "\n";
-		//std::cout << "\n";
-		//std::cout << "\n";
 	}
 	void draw()																				//Draw contours
 	{
 		Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
 		image = newImage;
 		if (blob_state == 1)
-			rectangle(newImage, center, Point(center.x + 1, center.y + 1), CV_RGB(255, 0, 0), 10);
+			rectangle(result, center, Point(center.x + 1, center.y + 1), CV_RGB(255, 0, 0), 10);
 		else
-			rectangle(newImage, center, Point(center.x + 1, center.y + 1), CV_RGB(0, 0, 255), 10);
-		//drawContours(result, contours,
-		//	-1,
-		//	cv::Scalar(0),
-		//	1);
+			rectangle(result, center, Point(center.x + 1, center.y + 1), CV_RGB(0, 0, 255), 10);
+
+
 	}
 
 	Mat frame,
@@ -525,7 +528,7 @@ public:
 		gray_frame,
 		subtracted,
 		contour_frame;
-	
+	Point2f center;
 	std::vector<std::vector<cv::Point>> contours;
 	int min_contour = 100,																	//Minimum size of the contour to be counted as objet of interest
 		max_contour = 600,																	//Maximum size of the contour to be counted as objet of interest
@@ -540,11 +543,11 @@ public:
 		blob_perimeter,
 		blob_sqrt_area,
 		blob_circularity,
-		blob_circularity_precision = 19;													//Circularity threshold, determine state/gesture
+		blob_circularity_precision = 0.005;													//Circularity threshold, determine state/gesture
+
+
+
 };
-
-
-
 
 int main(int, char)
 {
