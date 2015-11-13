@@ -13,7 +13,7 @@ using namespace std;
 
 class GameContainer
 {
-	Mat image1 = Mat::zeros(480,640, CV_8UC3);
+	Mat image1 = Mat::zeros(400,800, CV_8UC3);
 	int tempcollide = 1;
 	int tempSizeX = image1.cols; // X-size of the gameboard
 	int tempSizeY = image1.rows; // Y-size of the gameboard
@@ -42,26 +42,9 @@ public:
 	
 	//Initializing the unchanging features of the text
 	int fontFace = FONT_HERSHEY_SIMPLEX;
-	int thickness = 3;
+	int thickness = 2;
 	int baseline = 0;
 	double fontScale = sizeY / 625.0;
-
-	void collide(Point hCenter, int i, int x,  int y){
-			if (x + circleRadius > hCenter.x && y + circleRadius > hCenter.y && x - circleRadius < hCenter.x && y - circleRadius < hCenter.y){
-				cout << "now";
-				x = hCenter.x;
-				y = hCenter.y;
-		}
-	}
-
-	void uNumber(int i, int x, int y){
-		name = i * 2 + 1;
-		placeX = x;
-		placeY = y;
-	}
-	void eNunbers(){
-
-	}
 
 };
 
@@ -86,7 +69,7 @@ class AnswerBox : GameContainer{
 	int tempB = 255;
 	int tempFill = 1;
 	int tempScore = 0;
-	double tempboxSize = 648/7.2;
+	double tempboxSize = sizeX/7.2;
 public:
 	int r = tempR;
 	int g = tempG;
@@ -95,6 +78,7 @@ public:
 	int score = tempScore;
 	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
 	double boxSize = tempboxSize;
+	bool insideBox[];
 
 	void ansBoxLocation(int, int, double objX[], double objY[], bool pos[], int yourAnswer[], int realAnswer[], int);
 	void checkAnswer(int, int, double objX[], double objY[], bool pos[], int yourAnswer[], int realAnswer[], int);
@@ -109,9 +93,16 @@ void AnswerBox::ansBoxLocation(int x, int y, double objX[], double objY[], bool 
 
 void AnswerBox::checkAnswer(int y, int x, double objX[], double objY[], bool pos[], int yourAnswer[], int realAnswer[], int player){
 	for (int i = 0; i < 10; i++)
+	{
+		r = 255;
+		g = 255;
+		b = 255;
+		fill = 1;
+		insideBox[i] = false;
+		if (pos[i])
 		{
-			if (pos[i])
-				if (objX[i] > x && objY[i] > y && objX[i] < x + boxSize && objY[i] < y + boxSize){
+			
+			if (objX[i] > x && objY[i] > y && objX[i] < x + boxSize && objY[i] < y + boxSize)
 			{
 				if (yourAnswer[i] == realAnswer[player]){
 					r = 0;
@@ -119,16 +110,20 @@ void AnswerBox::checkAnswer(int y, int x, double objX[], double objY[], bool pos
 					fill = -1;
 					addPoint(x, y);
 				}
+
 				if (yourAnswer[i] != realAnswer[player]){
 					g = 0;
-
 					b = 0;
 					fill = -1;
 				}
+				insideBox[i] = true;
+				cout << "check";
 			}
+
 		}
 	}
 }
+
 //HEEEEJ! 
 void AnswerBox::addPoint(int x, int y){
 	//Initialzing the changing features of the text
@@ -139,13 +134,13 @@ void AnswerBox::addPoint(int x, int y){
 		String text = to_string(score) + " Point";
 		Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
 		baseline += thickness;
-		putText(image, text, Point(y - textSize.width / 2, x + textSize.height / 2), fontFace, fontScale, Scalar::all(255), 1, 8);
+		putText(image, text, Point(y - textSize.width / 2, x + textSize.height / 2), fontFace, fontScale, Scalar::all(255), thickness, 8);
 	}
 	else{
 		String text = to_string(score) + " Points";
 		Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
 		baseline += thickness;
-		putText(image, text, Point(y - textSize.width / 2, x + textSize.height / 2), fontFace, fontScale, Scalar::all(255), 1, 8);
+		putText(image, text, Point(y - textSize.width / 2, x + textSize.height / 2), fontFace, fontScale, Scalar::all(255), thickness, 8);
 	}
 }
 
@@ -243,7 +238,7 @@ void EquationBox::createEquation(int i,  int equationSizes, int x, int y, int y2
 			}			if (x - 5 > hCenter.x && y + 5 > hCenter.y && x + textSize.width + 5 < hCenter.x && y - textSize.height - 5 < hCenter.y){
 				
 			}
-	putText(image, text, Point(x, y), fontFace, fontScale, Scalar::all(255), 1, 8);
+			putText(image, text, Point(x, y), fontFace, fontScale, Scalar::all(255), thickness, 8);
 	rectangle(image, Point(x - 5, y + 5), Point(x + textSize.width + 5, y - textSize.height - 5), Scalar::all(255), 1);
 }
 
@@ -270,15 +265,18 @@ public:
 	int answers[10];
 	int tempArray[10];
 	bool holding[10];
+	bool firstHold = true;
+	bool myInsideBox = true;
+	bool notInsideBox[10];
 
 	int eqStart = 0;
 
 	
 	//void spinningCircles(int, int answers[], int, double, int, int &baseline, double, double, int, double, double, Mat);
-	void singleCircle(int, int answers[], int radius, double speed, Point hCenter);
+	void singleCircle(int, int answers[], int radius, double speed, Point hCenter, bool[]);
 	void rotate(Mat src, double rotateAngle, Mat dst, int x, int y);
 	void numberGenerator(int equationsP1[], int equationsP2[]);
-	void circulate(int, int, Point);
+	void circulate(int, int, Point, bool[]);
 	void drop();
 	void grab();
 
@@ -297,8 +295,8 @@ void Answers::numberGenerator(int equationsP1[], int equationsP2[]){
 	
 	for (int i = equationSize; i < answersSize; i++)
 	{
-		rNumber = rand() % 21;
-		answers[i] = 101;
+		rNumber = rand() % 19;
+		answers[i] = rNumber;
 	}
 
 	for (int i = 0; i < answersSize; i++){
@@ -309,7 +307,7 @@ void Answers::numberGenerator(int equationsP1[], int equationsP2[]){
 	}
 }
 
-void Answers::circulate(int x, int y, Point hCenter){
+void Answers::circulate(int x, int y, Point hCenter, bool insideBox[]){
 	{
 		//Vari from other classes
 		double radiusOuter = sizeY / 2 - circleRadius*6;
@@ -326,15 +324,15 @@ void Answers::circulate(int x, int y, Point hCenter){
 		rotateSpeed += 2.8;
 
 		//The inner circle
-		singleCircle(0, answers, radiusInner, speedRight, hCenter);
+		singleCircle(0, answers, radiusInner, speedRight, hCenter, insideBox);
 
 		//The outer circle
-		singleCircle(5, answers, radiusOuter, speedLeft, hCenter);
+		singleCircle(5, answers, radiusOuter, speedLeft, hCenter, insideBox);
 		
 	}
 }
 
-void Answers::singleCircle(int i, int ans[], int radius, double speed, Point hCenter){
+void Answers::singleCircle(int i, int ans[], int radius, double speed, Point hCenter, bool insideBox[]){
 	angle = 2 * M_PI / (answersSize/2);
 	eqStart = i; 
 	
@@ -351,24 +349,34 @@ void Answers::singleCircle(int i, int ans[], int radius, double speed, Point hCe
 		//Declaring the position of the answer
 			x[i] = radius*sin(angle * i + speed) + sizeX / 2;
 			y[i] = radius*cos(angle * i + speed) + sizeY / 2;
-
-			if (x[i] + circleRadius > hCenter.x && y[i] + circleRadius > hCenter.y && x[i] - circleRadius < hCenter.x && y[i] - circleRadius < hCenter.y){
-				holding[i] = true;
-			}
+			
+			
+			if (firstHold == true) {
+				if (x[i] + circleRadius > hCenter.x && y[i] + circleRadius > hCenter.y && x[i] - circleRadius < hCenter.x && y[i] - circleRadius < hCenter.y){
+					holding[i] = true;
+					firstHold = false;
+				}
+			}		
 			if (holding[i]){
 				x[i] = hCenter.x;
 				y[i] = hCenter.y;
+				if (insideBox[i]){
+					holding[i] = false;
+					firstHold = true;
+				
+				}
+				
 			}
 		Point answerPos(x[i], y[i]);
-
 		//Creating the numbers to be shown
 		circle(image, answerPos, circleRadius, Scalar(0, 0, 255), 1, 1);
-		putText(image, text, Point(x[i] - textSize.width / 2, y[i] + textSize.height / 2), fontFace, fontScale, Scalar::all(255), 1, 8);
+		putText(image, text, Point(x[i] - textSize.width / 2, y[i] + textSize.height / 2), fontFace, fontScale, Scalar::all(255), thickness, 8);
 		//rotate(textImg, rotateSpeed, textImg, x, y);
 		//Adds the new text image to the source image
 		//image = image + textImg;
 	}
 }
+
 
 void Answers::rotate(Mat src, double rotateAngle, Mat dst, int x, int y)
 {
@@ -388,9 +396,9 @@ public:
 		Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
 		image = newImage;
 		String text = to_string(printin);
-		putText(newImage, text, Point(y, x), fontFace, fontScale, Scalar::all(255), 1);
+		putText(newImage, text, Point(y, x), fontFace, fontScale, Scalar::all(255), thickness);
 		if (printin >= 10)
-			putText(newImage, "wow", Point(250, 300), fontFace, fontScale, Scalar::all(255), 1);
+			putText(newImage, "wow", Point(250, 300), fontFace, fontScale, Scalar::all(255), thickness);
 		final = clock() - init;
 		printin = final / (CLOCKS_PER_SEC);
 	}
@@ -512,7 +520,6 @@ public:
 	}
 	void draw()																				//Draw contours
 	{
-		imshow("SHOWS", frame);
 		Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
 		image = newImage;
 		if (blob_state == 1)
@@ -552,13 +559,11 @@ public:
 int main(int, char)
 {
 	ImageProcessing IPGod;
-	VideoCapture cap(1);
+	VideoCapture cap(0);
 	if (!cap.isOpened()){
 		return -1;
 		std::cout << "Not found";
 	}
-	cap >> IPGod.background;
-	cvtColor(IPGod.background, IPGod.background, CV_RGB2GRAY);
 
 	GameContainer gameContainer;
 
@@ -581,6 +586,8 @@ int main(int, char)
 	Answers answers;
 	answers.numberGenerator(equationsP1.realAnswer, equationsP2.realAnswer);
 
+	cap >> IPGod.background;
+	cvtColor(IPGod.background, IPGod.background, CV_RGB2GRAY);
 	for (;;){
 		cap >> IPGod.frame;
 		IPGod.thresholding();
@@ -594,10 +601,11 @@ int main(int, char)
 
 		Mat image = Mat::zeros(gameContainer.sizeY, gameContainer.sizeX, CV_8UC3);
 		mathTimerP1.startTimer(120,385);
-		answers.circulate(100, 100, IPGod.center);
+		answers.circulate(100, 100, IPGod.center, answerBoxP1.insideBox);
 		//mathTimerP1.startTimer();
 		//mathTimerP2.startTimer(gameContainer.sizeX - gameContainer.sizeX / 4, gameContainer.sizeY - gameContainer.sizeY / 4);
 		image = gameContainer.image + answerBoxP1.image + answerBoxP2.image + answers.image + mathTimerP1.image + mathTimerP2.image + equationsP1.image + equationsP2.image + circles.image + IPGod.image;
+		namedWindow("Gaaame", CV_WINDOW_AUTOSIZE);
 		imshow("Gaaame", image);
 		if (waitKey(30) >= 0)
 			break;
