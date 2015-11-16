@@ -33,6 +33,8 @@ public:
 	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
 	double placeX = tempPlaceX;
 	double placeY = tempPlaceY;	
+	int placeXArray[10];
+	int placeYArray[10];
 	int eqState = tempeqState;
 	int handState = temphandState;
 	int handPosX = temphandPosX;
@@ -157,7 +159,6 @@ class EquationBox : GameContainer{
 	int tempheight;
 	int tempequationSize;
 	int temprealAnswer;
-	int y2temp = 100;
 
 	bool tempeqRun = false;
 
@@ -166,11 +167,10 @@ public:
 	int rNumber2 = temprNumber2;
 	int rTempNumber1 = temprTempNumber1;
 	int yourAnswer = tempyourAnswer;
-	int y2 = y2temp;
 
 	int rOperator = temprOperator;
-	int realAnswer[2];
-	String equations[2];
+	int realAnswer[10];
+	String equations[10];
 
 	int width = tempwidth;
 	int height = tempheight;
@@ -186,61 +186,75 @@ public:
 	bool visibility = tempVisibility;
 	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
 	//Functions
-	void eqLocation(int, int, int, int, int, int, int, Point, int);
+	void eqLocation(int, int, int, int, int, int, int, Point, int, String[]);
 	void pickEquation();
-	void createEquation(int, int, int x, int y, int y2, Mat img, Point, int);
+	void createEquation(int, int, int x[], int y[], Mat img, Point, int);
 };
 
-void EquationBox::eqLocation(int eqStart, int placeY, int placeX, int homeY, int homeX, int enemyY, int enemyX, Point hCenter, int check)
+void EquationBox::eqLocation(int eqStart, int intY, int intX, int homeY, int homeX, int enemyY, int enemyX, Point hCenter, int check, String eq[])
 {
-	createEquation(eqStart, equationSize / 2, placeX, placeY, y2, image, hCenter, check);
+	int x[10];
+	int y[10];
+	for (int i = 0; i < 10; i++){
+		x[i] = intX;
+		y[i] = intY;
+	}
+	createEquation(eqStart, equationSize / 2, x, y, image, hCenter, check);
+		for (int i = 0; i < 11; i++){
+		y[i] = y[i] + 50 * (i - eqStart);
+		text = equations[i];
+		cout << text;
+		putText(image, text, Point(x[i], y[i]), fontFace, fontScale, Scalar::all(255), thickness, 8);
+		rectangle(image, Point(x[i] - 5, y[i] + 5), Point(x[i] + textSize.width + 5, y[i] - textSize.height - 5), Scalar::all(255), 1);
+	}
+	
 }
 
 void EquationBox::pickEquation(){
 	if (eqState == 1){
 		cout << "You did it!\n";
-		//if (hand.pColor == eq.pColor) //Checks if the color on the hand picking and the equation adds up
-		//eqState = 2;
 	}
 }
 
-void EquationBox::createEquation(int i,  int equationSizes, int x, int y, int y2, Mat img, Point hCenter, int check){
-	
-	if (check > 3)
-		eqState = 1;
+void EquationBox::createEquation(int i, int equationSizes, int x[], int y[], Mat img, Point hCenter, int check){
+
+	int eqStart = 0;
+	eqStart = i;
+
 	equationSize = sizeof(equations) / sizeof(*equations);
-	srand(time(NULL)+i);	
-	
-			rNumber1 = rand() % 10;
-			rNumber2 = rand() % 10;
-			rOperator = rand() % 2;
+	srand(time(NULL) + i);
 
-			if (rNumber1 <= rNumber2){
-				rTempNumber1 = rNumber1;
-				rNumber2 = rNumber1;
-				rNumber1 = rTempNumber1;
-			}
+	for (i; i < 5 + eqStart; i++){
+		rNumber1 = rand() % 10;
+		rNumber2 = rand() % 10;
+		rOperator = rand() % 2;
+		
 
-			if (rOperator == 0){ //in here goes an equation with subtraction	
-				equations[i] = to_string(rNumber1) + "-" + to_string(rNumber2);
-				text = equations[i];
-				textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
-				baseline += thickness;
-				realAnswer[i] = rNumber1 - rNumber2;
-				
-			}
-			else if (rOperator == 1){ //In here goes an equation with addition
-				equations[i] = to_string(rNumber1) + "+" + to_string(rNumber2);
-				text = equations[i];
-				textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
-				baseline += thickness;
-				realAnswer[i] = rNumber1 + rNumber2;
-			}			if (x - 5 > hCenter.x && y + 5 > hCenter.y && x + textSize.width + 5 < hCenter.x && y - textSize.height - 5 < hCenter.y){
-				
-			}
-			putText(image, text, Point(x, y), fontFace, fontScale, Scalar::all(255), thickness, 8);
-	rectangle(image, Point(x - 5, y + 5), Point(x + textSize.width + 5, y - textSize.height - 5), Scalar::all(255), 1);
+		if (rNumber1 <= rNumber2){
+			rTempNumber1 = rNumber1;
+			rNumber2 = rNumber1;
+			rNumber1 = rTempNumber1;
+		}
+
+		if (rOperator == 0){ //in here goes an equation with subtraction	
+			equations[i] = to_string(rNumber1) + "-" + to_string(rNumber2);
+			text = equations[i];
+			textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
+			baseline += thickness;
+			realAnswer[i] = rNumber1 - rNumber2;
+
+		}
+		else if (rOperator == 1){ //In here goes an equation with addition
+			equations[i] = to_string(rNumber1) + "+" + to_string(rNumber2);
+			text = equations[i];
+			textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
+			baseline += thickness;
+			realAnswer[i] = rNumber1 + rNumber2;
+		}
+	}
 }
+
+
 
 class Answers : GameContainer{
 	double tempangle;
@@ -284,7 +298,7 @@ public:
 
 void Answers::numberGenerator(int equationsP1[], int equationsP2[]){
 	
-	equationSize = 2;
+	equationSize = 10;
 
 	answersSize = sizeof(answers) / sizeof(*answers);
 	for (int i = 0; i < equationSize/2; i++)
@@ -570,11 +584,11 @@ int main(int, char)
 	MathTimer mathTimerP1;
 	MathTimer mathTimerP2;
 	mathTimerP1.setTimer();
-	
+
 	EquationBox equationsP1;
 	EquationBox equationsP2;
-	equationsP1.eqLocation(0, gameContainer.sizeY / 1.4, gameContainer.sizeX / 20, 0, 0, 0, 0, IPGod.center, mathTimerP1.printin);
-	equationsP2.eqLocation(1, gameContainer.sizeY / 1.4, gameContainer.sizeX / 1.1, 0, 0, 0, 0, IPGod.center, mathTimerP2.printin);
+	equationsP1.eqLocation(0, 250, 50, 0,0, 0, 0, IPGod.center, mathTimerP1.printin, equationsP1.equations);
+	equationsP2.eqLocation(5, 250, 700, 0, 0, 0, 0, IPGod.center, mathTimerP2.printin, equationsP2.equations);
 	equationsP1.pickEquation();
 
 	AnswerBox answerBoxP1;
