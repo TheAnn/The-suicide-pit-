@@ -21,7 +21,6 @@ public:
 		subtract(gray_frame, background, subtracted, noArray(), -1);
 		medianBlur(subtracted, subtracted, 5);
 		threshold(subtracted, thresholded, 30, 255, CV_THRESH_BINARY);
-		
 	}
 	void contour()																			//find the external contours 
 	{
@@ -38,6 +37,7 @@ public:
 		std::vector<std::vector<cv::Point>>::
 			const_iterator itc(contours.begin());
 		int vec = 0;
+		t = 0;
 		while (itc != contours.end())
 		{
 			if (itc->size() < min_contour || itc->size() > max_contour)
@@ -51,11 +51,11 @@ public:
 				rec_y = r0.y;
 				rec_height = r0.height;
 				rec_width = r0.width;
-				blob_perimeter = contours.size();
 				blobArea();
 				if (blob_area < 2200||blob_area>6000)
 					itc = contours.erase(itc);
 				else{
+					blob_perimeter = itc->size();
 					circularity();
 					blobColor();
 					blobState();
@@ -121,13 +121,17 @@ public:
 
 	void gameCode()																			//Put game Code
 	{
+		
+		std::cout << t << "\n";
 		std::cout << blob_area<< "\n";
 		std::cout << blob_circularity << "\n";
 		std::cout << "\n";
 		std::cout << "\n";
+		t++;
 	}
 	void draw()																				//Draw contours
 	{
+		namedWindow("Result", CV_WINDOW_AUTOSIZE);
 		Mat result(frame.size(), CV_8UC3, cv::Scalar(255,255,255));
 		if (blob_state==1)
 			rectangle(result, center, Point(center.x+1,center.y+1), CV_RGB(255, 0, 0), 10);
@@ -138,6 +142,7 @@ public:
 			-1, 
 			cv::Scalar(0), 
 			1);
+		resize(result, result, cvSize(1920, 960));
 		imshow("Result", result);
 		
 	}
@@ -152,9 +157,12 @@ public:
 	std::vector<std::vector<cv::Point>> contours;
 	int min_contour=100,																	//Minimum size of the contour to be counted as objet of interest
 		max_contour=600,																	//Maximum size of the contour to be counted as objet of interest
+		min_area=2200,																		//Minimum area of the blob to be counted as objet of interest
+		max_area=6000,																		//Maximum area of the blob to be counted as objet of interest
 		blob_area,
 		blob_color,
-		blob_state;
+		blob_state,
+		t;
 	float radius;
 	double rec_y,
 		   rec_x,
@@ -163,7 +171,7 @@ public:
 		   blob_perimeter, 
 		   blob_sqrt_area, 
 		   blob_circularity,
-		   blob_circularity_precision=0.005;													//Circularity threshold, determine state/gesture
+		   blob_circularity_precision=1.0;													//Circularity threshold, determine state/gesture
 
 
 
@@ -183,7 +191,6 @@ int main(int, char)
 		IPGod.thresholding();
 		IPGod.contour();
 		IPGod.eliminteContours();
-		//IPGod.bounding();
 
 
 		if (waitKey(30) >= 0)
