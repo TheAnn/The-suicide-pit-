@@ -200,13 +200,13 @@ void EquationBox::eqLocation(int eqStart, int intY, int intX, int homeY, int hom
 		y[i] = intY;
 	}
 	createEquation(eqStart, equationSize / 2, x, y, image, hCenter, check);
-		for (int i = 0; i < 11; i++){
+		
 		y[i] = y[i] + 50 * (i - eqStart);
 		text = equations[i];
 		cout << text;
-		putText(image, text, Point(x[i], y[i]), fontFace, fontScale, Scalar::all(255), thickness, 8);
+		putText(image, "hey", Point(x[i], y[i]), fontFace, fontScale, Scalar::all(255), thickness, 8);
 		rectangle(image, Point(x[i] - 5, y[i] + 5), Point(x[i] + textSize.width + 5, y[i] - textSize.height - 5), Scalar::all(255), 1);
-	}
+	
 	
 }
 
@@ -575,7 +575,7 @@ int main(int, char)
 	ImageProcessing IPGod;
 	VideoCapture cap(0);
 	if (!cap.isOpened()){
-		return -1;
+		
 		std::cout << "Not found";
 	}
 
