@@ -67,7 +67,7 @@ public:
 	void whiteBalance(Point2f center);
 
 	int getColor(Point2f center,int ch);
-private:
+public:
 	
 	Mat thresholded,
 		gray_frame,
@@ -75,9 +75,9 @@ private:
 		contour_frame;
 	std::vector<std::vector<cv::Point>> contours;
 	int min_contour = 150,																		//Minimum size of the contour to be counted as objet of interest.
-		max_contour = 400,																		//Maximum size of the contour to be counted as objet of interest.
-		min_area = 1200,
-		max_area = 6000,
+		max_contour = 350,																		//Maximum size of the contour to be counted as objet of interest.
+		min_area = 2200,
+		max_area = 5400,
 		blob_area,
 		vec;
 	float radius;
@@ -103,7 +103,7 @@ int main(int, char)
 	Block one(a,255), two(b,200);
 
 	namedWindow("Game", CV_WINDOW_AUTOSIZE);
-
+	waitKey(0);
 	VideoCapture cap(2);
 	if (!cap.isOpened())
 		return -1;
@@ -115,12 +115,15 @@ int main(int, char)
 
 		cap >> frame;
 		
+		
 		IPGod.thresholding();
+		imshow("img", IPGod.thresholded);
+		imshow("imgSub", IPGod.subtracted);
 		IPGod.contour();
 		IPGod.eliminteContours();
 		display_area = Mat::zeros(frame.size(), frame.type());
 		
-		one.draw(1);
+		one.draw(0);
 		two.draw(0);
 		
 		if (waitKey(30) >= 0){
@@ -199,6 +202,7 @@ void ImageProcessing::eliminteContours()
 			rec_y = r0.y;
 			rec_height = r0.height;
 			rec_width = r0.width;
+
 			blob_perimeter = itc->size();
 			blobArea();
 			if (blob_area < min_area || blob_area>max_area)
@@ -209,7 +213,7 @@ void ImageProcessing::eliminteContours()
 				else{
 				circularity();
 				blobColor();
-				center[blob_color[vec]] = center[0];
+				center[blob_color[vec]+5] = center[vec];
 				blobState();
 				gameCode();
 				draw();
@@ -225,7 +229,7 @@ void ImageProcessing::thresholding()
 
 	subtract(gray_frame, background, subtracted, noArray(), -1);
 	medianBlur(subtracted, subtracted, 5);
-	threshold(subtracted, thresholded, 30, 255, CV_THRESH_BINARY);
+	threshold(subtracted, thresholded, 1, 255, CV_THRESH_BINARY);
 
 }
 void ImageProcessing::contour()
@@ -305,7 +309,7 @@ void ImageProcessing::draw()
 	Mat result(frame.size(), CV_8UC3, cv::Scalar(255, 255, 255));
 	if (blob_state[vec] == 1){
 		//rectangle(display_area, center[vec], Point(center[vec].x + 1, center[vec].y + 1), CV_RGB(0, 255, 0), 10);
-		putText(display_area, vecS, center[vec], FONT_HERSHEY_SIMPLEX, 1, CV_RGB(0, 255, 0), 3, 8, false);
+		putText(display_area, vecS, center[vec], FONT_HERSHEY_SIMPLEX, 1, CV_RGB(255, 255, 255), 3, 8, false);
 		//std::cout << blob_color[vec];
 	}
 	else{
