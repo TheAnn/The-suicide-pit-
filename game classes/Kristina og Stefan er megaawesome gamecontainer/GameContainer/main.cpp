@@ -13,7 +13,7 @@ using namespace std;
 
 class GameContainer
 {
-	Mat image1 = Mat::zeros(400, 800, CV_8UC3);
+	Mat image1 = Mat::zeros(480, 640, CV_8UC3);
 	int tempcollide = 1;
 	int tempSizeX = image1.cols; // X-size of the gameboard
 	int tempSizeY = image1.rows; // Y-size of the gameboard
@@ -578,7 +578,7 @@ public:
 int main(int, char)
 {
 	ImageProcessing IPGod;
-	VideoCapture cap(0);
+	VideoCapture cap(2);
 	if (!cap.isOpened()){
 
 		std::cout << "Not found";
@@ -592,8 +592,8 @@ int main(int, char)
 
 	EquationBox equationsP1;
 	EquationBox equationsP2;
-	equationsP1.eqLocation(0, 300, 50, 0, 0, 0, 0, IPGod.center, mathTimerP1.printin, equationsP1.equations);
-	equationsP2.eqLocation(1, 300, 700, 0, 0, 0, 0, IPGod.center, mathTimerP2.printin, equationsP2.equations);
+	equationsP1.eqLocation(0, 310, 50, 0, 0, 0, 0, IPGod.center, mathTimerP1.printin, equationsP1.equations);
+	equationsP2.eqLocation(1, 310, gameContainer.sizeX-100, 0, 0, 0, 0, IPGod.center, mathTimerP2.printin, equationsP2.equations);
 	equationsP1.pickEquation();
 
 	AnswerBox answerBoxP1;
