@@ -286,7 +286,7 @@ public:
 	void singleCircle(int, int answers[], int radius, double speed, Point2f hCenter, bool[], int handState);
 	void rotate(Mat src, double rotateAngle, Mat dst, int x, int y);
 	void numberGenerator(int equationsP1[], int equationsP2[]);
-	void circulate(int, int, Point2f[], bool[], int handState[], int[]);
+	void circulate(int, int, Point2f[], bool[], int handState[], int[], int);
 	void drop();
 	void grab();
 
@@ -317,7 +317,7 @@ void Answers::numberGenerator(int equationsP1[], int equationsP2[]){
 	}
 }
 
-void Answers::circulate(int x, int y, Point2f hCenter[], bool insideBox[], int handState[], int player[]){
+void Answers::circulate(int x, int y, Point2f hCenter[], bool insideBox[], int handState[], int player[], int vec){
 	{
 		//Vari from other classes
 		double radiusOuter = sizeY / 2 - circleRadius * 6;
@@ -334,10 +334,10 @@ void Answers::circulate(int x, int y, Point2f hCenter[], bool insideBox[], int h
 		rotateSpeed += 2.8;
 
 		//The inner circle
-		singleCircle(0, answers, radiusInner, speedRight, hCenter[player[1]+5], insideBox, handState[1+5]);
-
+		singleCircle(0, answers, radiusInner, speedRight, hCenter[player[vec]], insideBox, handState[player[vec]]);
+		cout << vec;
 		//The outer circle
-		singleCircle(5, answers, radiusOuter, speedLeft, hCenter[player[1]+5], insideBox, handState[1+5]);
+		singleCircle(5, answers, radiusOuter, speedLeft, hCenter[player[vec]], insideBox, handState[player[vec]]);
 
 	}
 }
@@ -360,13 +360,13 @@ void Answers::singleCircle(int i, int ans[], int radius, double speed, Point2f h
 		x[i] = radius*sin(angle * i + speed) + sizeX / 2;
 		y[i] = radius*cos(angle * i + speed) + sizeY / 2;
 
-		if (handState == 1){
-			if (firstHold == true) {
+		//if (handState == 1){
+		//	if (firstHold == true) {
 				if (x[i] + circleRadius > hCenter.x && y[i] + circleRadius > hCenter.y && x[i] - circleRadius < hCenter.x && y[i] - circleRadius < hCenter.y){
 					holding[i] = true;
 					firstHold = false;
-				}
-			}
+			//	}
+		//	}
 		}
 		if (holding[i]){
 			x[i] = hCenter.x;
@@ -374,7 +374,6 @@ void Answers::singleCircle(int i, int ans[], int radius, double speed, Point2f h
 			if (insideBox[i]){
 				holding[i] = false;
 				firstHold = true;
-
 			}
 
 		}
@@ -450,7 +449,7 @@ public:
 
 	int getColor(Point2f center, int ch);
 public:
-
+	int player = 0;
 	Mat thresholded,
 		gray_frame,
 		subtracted,
@@ -488,7 +487,7 @@ void ImageProcessing::whiteBalance(Point2f center)
 	}
 	sub_blue = color[0] - color[2];
 	sub_green = color[1] - color[2];
-	std::cout << "**************************************************" << sub_blue << " " << sub_green << " \n";
+	//std::cout << "**************************************************" << sub_blue << " " << sub_green << " \n";
 
 }
 void ImageProcessing::eliminteContours()
@@ -521,7 +520,7 @@ void ImageProcessing::eliminteContours()
 			else{
 				circularity();
 				blobColor();
-				center[blob_color[vec] + 5] = center[vec];
+				center[blob_color[vec]] = center[vec];
 				blobState();
 				draw();
 				++vec;
@@ -585,24 +584,23 @@ void ImageProcessing::blobColor()
 	int red = getColor(center[vec], 2);
 
 
-	std::cout << blue << " " << green << " " << red << " \n";
-	if (blue > green)
-		if (blue > red)
-			blob_color[vec] = 1;
-		else
-			blob_color[vec] = 3;
-	else if (green > red)
-		blob_color[vec] = 2;
-	else
+	//std::cout << blue << " " << green << " " << red << " \n";
+	if (green > red){
+		player = 1;
+		blob_color[vec] = 1;
+	}
+	else{
 		blob_color[vec] = 3;
+		player = 2;
+	}
 
 }
 void ImageProcessing::blobState()
 {
 	if (blob_circularity < blob_circularity_precision)
-		blob_state[blob_color[vec] + 5] = 1;
+		blob_state[blob_color[vec]] = 1;
 	else
-		blob_state[blob_color[vec] + 5] = 2;
+		blob_state[blob_color[vec]] = 2;
 }
 void ImageProcessing::circularity()
 {
@@ -612,7 +610,7 @@ void ImageProcessing::circularity()
 void ImageProcessing::draw()
 {
 	std::string vecS = std::to_string(blob_color[vec]);
-
+	imshow("imaaa", contour_frame);
 	Mat result(frame.size(), CV_8UC3, cv::Scalar(255, 255, 255));
 	if (blob_state[vec] == 1){
 		//rectangle(display_area, center[vec], Point(center[vec].x + 1, center[vec].y + 1), CV_RGB(0, 255, 0), 10);
@@ -637,7 +635,7 @@ void ImageProcessing::draw()
 int main(int, char)
 {
 	ImageProcessing IPGod;
-	VideoCapture cap(2);
+	VideoCapture cap(1);
 	if (!cap.isOpened()){
 
 		std::cout << "Not found";
@@ -680,7 +678,7 @@ int main(int, char)
 
 		Mat image = Mat::zeros(gameContainer.sizeY, gameContainer.sizeX, CV_8UC3);
 		mathTimerP1.startTimer(120, 385);
-		answers.circulate(100, 100, IPGod.center, answerBoxP1.insideBox, IPGod.blob_state, IPGod.blob_color);
+		answers.circulate(100, 100, IPGod.center, answerBoxP1.insideBox, IPGod.blob_state, IPGod.blob_color, IPGod.player);
 		//mathTimerP1.startTimer();
 		//mathTimerP2.startTimer(gameContainer.sizeX - gameContainer.sizeX / 4, gameContainer.sizeY - gameContainer.sizeY / 4);
 		image = gameContainer.image + answerBoxP1.image + answerBoxP2.image + answers.image + mathTimerP1.image + mathTimerP2.image + equationsP1.image + equationsP2.image + circles.image + IPGod.display_area;
