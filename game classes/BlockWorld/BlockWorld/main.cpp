@@ -14,10 +14,10 @@ using namespace cv;
 int sub_blue, sub_green;
 Point2f center[10];
 Mat background,
-	frame,
-	display_area;
+frame,
+display_area;
 int blob_state[10],
-	blob_color[10];
+blob_color;
 
 
 class Pad{
@@ -28,13 +28,15 @@ class Pad{
 class Block
 {
 public:
-	Block(Point2f cent, int col);
+	Block(Point2f cent, int r,int g, int b);
 	void draw(int n);
 	
 	void move(int m);
 
 private:
-	int color;
+	int red,
+		blue,
+		green;
 	Point2f	circle_center,
 		goal_point;
 	int object_color;
@@ -44,6 +46,7 @@ private:
 
 class ImageProcessing
 {
+
 public:
 	void thresholding();																		//Remove the background and threshold the image.
 
@@ -74,10 +77,10 @@ public:
 		subtracted,
 		contour_frame;
 	std::vector<std::vector<cv::Point>> contours;
-	int min_contour = 150,																		//Minimum size of the contour to be counted as objet of interest.
-		max_contour = 350,																		//Maximum size of the contour to be counted as objet of interest.
-		min_area = 2200,
-		max_area = 5400,
+	int min_contour = 100,																		//Minimum size of the contour to be counted as objet of interest.
+		max_contour = 450,																		//Maximum size of the contour to be counted as objet of interest.
+		min_area = 1200,
+		max_area = 6400,
 		blob_area,
 		vec;
 	float radius;
@@ -94,14 +97,11 @@ public:
 
 };
 
-
-
 int main(int, char)
 {
-	Point2f a(200.0f, 200.0f), b(300.0f,300.0f);
+	Point2f a(200.0f, 200.0f), b(300.0f, 300.0f);
 	ImageProcessing IPGod;
-	Block one(a,255), two(b,200);
-
+	Block one(a, 255,0,0), two(b, 255,0,0);
 	namedWindow("Game", CV_WINDOW_AUTOSIZE);
 	waitKey(0);
 	VideoCapture cap(2);
@@ -114,18 +114,20 @@ int main(int, char)
 	{
 
 		cap >> frame;
-		
-		
+		for (int i = 0; i < 10; i++)
+			center[i] = center[i]*0;
+
 		IPGod.thresholding();
 		imshow("img", IPGod.thresholded);
 		imshow("imgSub", IPGod.subtracted);
 		IPGod.contour();
 		IPGod.eliminteContours();
-		display_area = Mat::zeros(frame.size(), frame.type());
 		
-		one.draw(0);
-		two.draw(0);
-		
+		IPGod.draw();
+		IPGod.gameCode();
+		//one.draw(0);
+		//two.draw(0);
+
 		if (waitKey(30) >= 0){
 			std::cout << "Sign\n";
 			waitKey(0);
@@ -135,22 +137,26 @@ int main(int, char)
 	}
 	return 0;
 }
+
+
 //Pad
 void Pad::draw()
 {
 	rectangle(display_area, center, Point(center.x + 10, center.y + 100), CV_RGB(0, 0, 255), 2);
 }
 //Block
-Block::Block(Point2f cent,int col)
+Block::Block(Point2f cent, int r, int g, int b)
 {
-	color = col;
+	red=r;
+	green = g;
+	blue = b;
 	circle_center = cent;
 }
 void Block::draw(int n)
 {
 	
-	circle(display_area, circle_center, 25, CV_RGB(color,0,0), CV_FILLED);
-	if (blob_state[n] == 1 && display_area.at<Vec3b>(center[n])[2] == color)
+	circle(display_area, circle_center, 25, CV_RGB(red,green,blue), CV_FILLED);
+	if (blob_state[n] == 1 )
 	{
 		
 		move(n);
@@ -165,10 +171,7 @@ void Block::move(int m)
 
 //ImageProcessing
 
-void ImageProcessing::gameCode()
-{
 
-}
 void ImageProcessing::whiteBalance(Point2f center)
 {
 	sub_blue = 0;
@@ -196,7 +199,7 @@ void ImageProcessing::eliminteContours()
 		{
 			//std::cout << vec << "\n";
 			Rect r0(boundingRect(cv::Mat(contours[vec])));
-			minEnclosingCircle(Mat(contours[vec]), center[vec], radius);
+			
 
 			rec_x = r0.x;
 			rec_y = r0.y;
@@ -207,16 +210,15 @@ void ImageProcessing::eliminteContours()
 			blobArea();
 			if (blob_area < min_area || blob_area>max_area)
 				itc = contours.erase(itc);
-			else if (rec_width>150){
-					itc = contours.erase(itc);
-				}
-				else{
+			else{
+				center[0] = center[0] * 0;
+				minEnclosingCircle(Mat(contours[vec]), center[0], radius);
 				circularity();
 				blobColor();
-				center[blob_color[vec]+5] = center[vec];
+				center[blob_color] = center[0];
 				blobState();
-				gameCode();
-				draw();
+				//gameCode();
+				//draw();
 				++vec;
 				++itc;
 			}
@@ -229,7 +231,7 @@ void ImageProcessing::thresholding()
 
 	subtract(gray_frame, background, subtracted, noArray(), -1);
 	medianBlur(subtracted, subtracted, 5);
-	threshold(subtracted, thresholded, 1, 255, CV_THRESH_BINARY);
+	threshold(subtracted, thresholded, 10, 255, CV_THRESH_BINARY);
 
 }
 void ImageProcessing::contour()
@@ -273,56 +275,63 @@ int ImageProcessing::getColor(Point2f center,int ch)
 }
 void ImageProcessing::blobColor()
 {
-	int blue = getColor(center[vec],0)-sub_blue;
-	int green = getColor(center[vec], 1)-sub_green;
-	int red = getColor(center[vec], 2);
+	int blue = getColor(center[0],0)-sub_blue;
+	int green = getColor(center[0], 1)-sub_green;
+	int red = getColor(center[0], 2);
 
 
-	std::cout << blue << " " << green << " " << red << " \n";
+	//std::cout << blue << " " << green << " " << red << " \n";
 	if (blue > green)
 		if (blue > red)
-			blob_color[vec] = 1;
+			blob_color = 1;
 		else
-			blob_color[vec] = 3;
+			blob_color = 3;
 	else if (green > red)
-		blob_color[vec] = 2;
+		blob_color = 2;
 	else
-		blob_color[vec] = 3;
+		blob_color = 3;
 
 }
 void ImageProcessing::blobState()
 {
 	if (blob_circularity < blob_circularity_precision)
-		blob_state[vec] = 1;
+		blob_state[blob_color] = 1;
 	else
-		blob_state[vec] = 2;
+		blob_state[blob_color] = 2;
 }
 void ImageProcessing::circularity()
 {
 	blob_sqrt_area = 2 * sqrt(3.14*blob_area);
 	blob_circularity = blob_perimeter / blob_sqrt_area;
 }
+void ImageProcessing::gameCode()
+{
+
+	std::cout << blob_state[blob_color]<<"\n";
+	std::cout << center[blob_color] << "\n";
+	std::cout << "******************************************\n";
+}
 void ImageProcessing::draw()
 {
-	std::string vecS = std::to_string(blob_color[vec]);
+	
 
-	Mat result(frame.size(), CV_8UC3, cv::Scalar(255, 255, 255));
-	if (blob_state[vec] == 1){
+	//Mat result(frame.size(), CV_8UC3, cv::Scalar(255, 255, 255));
+	display_area = Mat::zeros(frame.size(), frame.type());
+	for (int i = 1; i < 4; i++)
+	{
+		std::string vecS = std::to_string(center[i].x);
 		//rectangle(display_area, center[vec], Point(center[vec].x + 1, center[vec].y + 1), CV_RGB(0, 255, 0), 10);
-		putText(display_area, vecS, center[vec], FONT_HERSHEY_SIMPLEX, 1, CV_RGB(255, 255, 255), 3, 8, false);
-		//std::cout << blob_color[vec];
+		putText(display_area, vecS, center[i], FONT_HERSHEY_SIMPLEX, 1, CV_RGB(255, 255, 255), 3, 8, false);
 	}
-	else{
-		//rectangle(display_area, center[vec], Point(center[vec].x + 1, center[vec].y + 1), CV_RGB(0, 0, 255), 10);
-		putText(display_area, vecS, center[vec], FONT_HERSHEY_SIMPLEX, 1, CV_RGB(255, 0, 0), 3, 8, false);
-		//std::cout << blob_color[vec];
-	}
+	
 
-	drawContours(result, contours,
+	drawContours(display_area, contours,
 		-1,
-		cv::Scalar(0),
+		cv::Scalar(255,255,255),
 		1);
 	imshow("Game", display_area);
 	
 
 }
+
+
