@@ -27,6 +27,8 @@ class GameContainer
 	int tempplayerColor = 1; //The player color determines the players team. 0 for white team and 1 for pink team
 
 public:
+
+
 	int sizeX = tempSizeX;
 	int sizeY = tempSizeY;
 	int name = tempName;
@@ -183,12 +185,12 @@ public:
 	bool visibility = tempVisibility;
 	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
 	//Functions
-	void eqLocation(int, int, int, int, int, int, int, Point, int, String[]);
+	void eqLocation(int, int, int, int, int, int, int, Point2f[], int, String[], int[]);
 	void pickEquation();
 	void createEquation(int, int, int x[], int y[], Mat img, Point, int);
 };
 
-void EquationBox::eqLocation(int eqStart, int intY, int intX, int homeY, int homeX, int enemyY, int enemyX, Point hCenter, int check, String eq[])
+void EquationBox::eqLocation(int eqStart, int intY, int intX, int homeY, int homeX, int enemyY, int enemyX, Point2f hCenter[], int check, String eq[], int player[])
 {
 	int x[2];
 	int y[2];
@@ -196,7 +198,7 @@ void EquationBox::eqLocation(int eqStart, int intY, int intX, int homeY, int hom
 		x[i] = intX;
 		y[i] = intY;
 	}
-	createEquation(eqStart, equationSize / 2, x, y, image, hCenter, check);
+	createEquation(eqStart, equationSize / 2, x, y, image, hCenter[player[eqStart]+5], check);
 
 
 }
@@ -281,10 +283,10 @@ public:
 
 
 	//void spinningCircles(int, int answers[], int, double, int, int &baseline, double, double, int, double, double, Mat);
-	void singleCircle(int, int answers[], int radius, double speed, Point hCenter, bool[], int handState);
+	void singleCircle(int, int answers[], int radius, double speed, Point2f hCenter, bool[], int handState);
 	void rotate(Mat src, double rotateAngle, Mat dst, int x, int y);
 	void numberGenerator(int equationsP1[], int equationsP2[]);
-	void circulate(int, int, Point, bool[], int handState);
+	void circulate(int, int, Point2f[], bool[], int handState[], int[]);
 	void drop();
 	void grab();
 
@@ -315,7 +317,7 @@ void Answers::numberGenerator(int equationsP1[], int equationsP2[]){
 	}
 }
 
-void Answers::circulate(int x, int y, Point hCenter, bool insideBox[], int handState){
+void Answers::circulate(int x, int y, Point2f hCenter[], bool insideBox[], int handState[], int player[]){
 	{
 		//Vari from other classes
 		double radiusOuter = sizeY / 2 - circleRadius * 6;
@@ -332,15 +334,15 @@ void Answers::circulate(int x, int y, Point hCenter, bool insideBox[], int handS
 		rotateSpeed += 2.8;
 
 		//The inner circle
-		singleCircle(0, answers, radiusInner, speedRight, hCenter, insideBox, handState);
+		singleCircle(0, answers, radiusInner, speedRight, hCenter[player[1]+5], insideBox, handState[1+5]);
 
 		//The outer circle
-		singleCircle(5, answers, radiusOuter, speedLeft, hCenter, insideBox, handState);
+		singleCircle(5, answers, radiusOuter, speedLeft, hCenter[player[1]+5], insideBox, handState[1+5]);
 
 	}
 }
 
-void Answers::singleCircle(int i, int ans[], int radius, double speed, Point hCenter, bool insideBox[], int handState){
+void Answers::singleCircle(int i, int ans[], int radius, double speed, Point2f hCenter, bool insideBox[], int handState){
 	angle = 2 * M_PI / (answersSize / 2);
 	eqStart = i;
 
@@ -413,157 +415,53 @@ public:
 	}
 };
 
+//ImageProcessing
+
 class ImageProcessing : GameContainer
 {
+
+public:
+	Point2f center[10];
+	Mat background,
+		frame,
+		display_area;
+	int sub_blue, sub_green;
+	int blob_state[10],
+		blob_color[10];
+
+	void thresholding();																		//Remove the background and threshold the image.
+
+	void contour();																				//Find the external contours.
+
+	void eliminteContours();																	//Eliminate too short or too long contours and extract data from the rest
+	//Add more conditions to the if/else statement to remove noise.
+
+	void blobArea();																			//Caculate area of the blob.
+
+	void circularity();																			//Calculate the circularity of the blob.
+
+	void blobColor();																			//Find the color of the blob 1-blue, 2-green, 3-red.
+
+	void blobState();																			//Get the state of the blob.
+
+	void draw();																				//Draw contours.
+
+	void whiteBalance(Point2f center);
+
+	int getColor(Point2f center, int ch);
 public:
 
-	void thresholding()
-	{
-		cvtColor(frame, gray_frame, CV_RGB2GRAY);
-
-		subtract(gray_frame, background, subtracted, noArray(), -1);
-		medianBlur(subtracted, subtracted, 5);
-		threshold(subtracted, thresholded, 30, 255, CV_THRESH_BINARY);
-	}
-	void contour()																			//find the external contours 
-	{
-		contour_frame = thresholded.clone();
-		findContours(contour_frame,
-			contours,
-			CV_RETR_EXTERNAL,
-			CV_CHAIN_APPROX_NONE);
-
-
-	}
-	void eliminteContours()																	//eliminate too short or too long contours and extract data from the rest
-	{																						//Add more conditions to the if/else statement to remove noise
-		std::vector<std::vector<cv::Point>>::
-			const_iterator itc(contours.begin());
-		int vec = 0;
-		t = 0;
-		while (itc != contours.end())
-		{
-			if (itc->size() < min_contour || itc->size() > max_contour)
-				itc = contours.erase(itc);
-			else
-			{
-				Rect r0(boundingRect(cv::Mat(contours[vec])));
-				minEnclosingCircle(Mat(contours[vec]), center, radius);
-
-				rec_x = r0.x;
-				rec_y = r0.y;
-				rec_height = r0.height;
-				rec_width = r0.width;
-				blobArea();
-				if (blob_area < min_area || blob_area>max_area)
-					itc = contours.erase(itc);
-				else{
-					blob_perimeter = itc->size();
-					circularity();
-					blobColor();
-					blobState();
-					gameCode();
-					draw();
-					++vec;
-					++itc;
-				}
-			}
-		}
-	}
-
-
-	void blobArea()																			//caculate area of the blob
-	{
-		double yMax = rec_y + rec_height - 1;
-		double xMax = rec_x + rec_width - 1;
-		blob_area = 1;
-		for (int y = rec_y; y < yMax; y++)
-		{
-			for (int x = rec_x; x < xMax; x++)
-			{
-				if (thresholded.at<unsigned char>(y, x)>0)
-				{
-					blob_area++;
-
-				}
-			}
-		}
-	}
-
-	void circularity()																		//calculate the circularity of the blob
-	{
-		blob_sqrt_area = 2 * sqrt(3.14*blob_area);
-		blob_circularity = blob_perimeter / blob_sqrt_area;
-	}
-
-	void blobColor()																		//find the color of the blob 1-blue, 2-green, 3-red
-	{
-		int blue = frame.at<Vec3b>(center.y, center.x)[0];
-		int green = frame.at<Vec3b>(center.y, center.x)[1];
-		int red = frame.at<Vec3b>(center.y, center.x)[2];
-
-		if (blue > green)
-			if (blue > red)
-				blob_color = 1;
-			else
-				blob_color = 3;
-		else if (green > red)
-			blob_color = 2;
-		else
-			blob_color = 3;
-
-	}
-
-	void blobState()																		//get the state of the blob
-	{
-		if (blob_circularity > blob_circularity_precision)
-			blob_state = 1;
-		else
-			blob_state = 2;
-	}
-
-	void gameCode()																			//Put game Code
-	{
-
-		//std::cout << t << "\n";
-		//std::cout << blob_area << "\n";
-		//std::cout << blob_circularity << "\n";
-		//std::cout << "\n";
-		//std::cout << "\n";
-		//t++;
-	}
-	void draw()																				//Draw contours
-	{
-		Mat newImage = Mat::zeros(sizeY, sizeX, CV_8UC3);
-		image = newImage;
-		if (blob_state == 1)
-			rectangle(newImage, center, Point(center.x + 1, center.y + 1), CV_RGB(255, 0, 0), 10);
-		else
-			rectangle(newImage, center, Point(center.x + 1, center.y + 1), CV_RGB(0, 0, 255), 10);
-
-		//drawContours(result, contours,
-		//	-1,
-		//	cv::Scalar(0),
-		//	1);
-
-	}
-	Mat image = Mat::zeros(sizeY, sizeX, CV_8UC3);
-	Mat frame,
-		background,
-		thresholded,
+	Mat thresholded,
 		gray_frame,
 		subtracted,
 		contour_frame;
-	Point2f center;
 	std::vector<std::vector<cv::Point>> contours;
-	int min_contour = 100,																	//Minimum size of the contour to be counted as objet of interest
-		max_contour = 600,																	//Maximum size of the contour to be counted as objet of interest
-		min_area = 2200,																		//Minimum area of the blob to be counted as objet of interest
-		max_area = 6000,																		//Maximum area of the blob to be counted as objet of interest
+	int min_contour = 150,																		//Minimum size of the contour to be counted as objet of interest.
+		max_contour = 350,																		//Maximum size of the contour to be counted as objet of interest.
+		min_area = 2200,
+		max_area = 5400,
 		blob_area,
-		blob_color,
-		blob_state,
-		t;
+		vec;
 	float radius;
 	double rec_y,
 		rec_x,
@@ -572,8 +470,169 @@ public:
 		blob_perimeter,
 		blob_sqrt_area,
 		blob_circularity,
-		blob_circularity_precision = 1.0;													//Circularity threshold, determine state/gesture
+		blob_circularity_precision = 1.2;														//Circularity threshold, determine state/gesture.
+
+
+
 };
+
+
+void ImageProcessing::whiteBalance(Point2f center)
+{
+	sub_blue = 0;
+	sub_green = 0;
+	int color[3];
+	for (int i = 0; i < 3; i++)
+	{
+		color[i] = getColor(center, i);
+	}
+	sub_blue = color[0] - color[2];
+	sub_green = color[1] - color[2];
+	std::cout << "**************************************************" << sub_blue << " " << sub_green << " \n";
+
+}
+void ImageProcessing::eliminteContours()
+{
+	std::vector<std::vector<cv::Point>>::
+		const_iterator itc(contours.begin());
+	vec = 0;
+	while (itc != contours.end())
+	{
+		if (itc->size() < min_contour || itc->size() > max_contour)
+			itc = contours.erase(itc);
+		else
+		{
+			//std::cout << vec << "\n";
+			Rect r0(boundingRect(cv::Mat(contours[vec])));
+			minEnclosingCircle(Mat(contours[vec]), center[vec], radius);
+
+			rec_x = r0.x;
+			rec_y = r0.y;
+			rec_height = r0.height;
+			rec_width = r0.width;
+
+			blob_perimeter = itc->size();
+			blobArea();
+			if (blob_area < min_area || blob_area>max_area)
+				itc = contours.erase(itc);
+			else if (rec_width>150){
+				itc = contours.erase(itc);
+			}
+			else{
+				circularity();
+				blobColor();
+				center[blob_color[vec] + 5] = center[vec];
+				blobState();
+				draw();
+				++vec;
+				++itc;
+			}
+		}
+	}
+}
+void ImageProcessing::thresholding()
+{
+	cvtColor(frame, gray_frame, CV_RGB2GRAY);
+
+	subtract(gray_frame, background, subtracted, noArray(), -1);
+	medianBlur(subtracted, subtracted, 5);
+	threshold(subtracted, thresholded, 1, 255, CV_THRESH_BINARY);
+
+}
+void ImageProcessing::contour()
+{
+	contour_frame = thresholded.clone();
+	findContours(contour_frame,
+		contours,
+		CV_RETR_EXTERNAL,
+		CV_CHAIN_APPROX_NONE);
+
+}
+void ImageProcessing::blobArea()
+{
+	double yMax = rec_y + rec_height - 1;
+	double xMax = rec_x + rec_width - 1;
+	blob_area = 1;
+	for (int y = rec_y; y < yMax; y++)
+	{
+		for (int x = rec_x; x < xMax; x++)
+		{
+			if (thresholded.at<unsigned char>(y, x)>0)
+			{
+				blob_area++;
+
+			}
+		}
+	}
+}
+int ImageProcessing::getColor(Point2f center, int ch)
+{
+	int color = 0;
+	for (int i = -1; i < 2; i++)
+	{
+		if (!center.x + i<0 || !center.x + i>640 || !center.y + i<0 || !center.y + i>480)
+			color = +frame.at<Vec3b>(center.y - 1, center.x + i)[ch] +
+			frame.at<Vec3b>(center.y, center.x + i)[ch] +
+			frame.at<Vec3b>(center.y + 1, center.x + i)[ch];
+	}
+
+	return color;
+}
+void ImageProcessing::blobColor()
+{
+	int blue = getColor(center[vec], 0) - sub_blue;
+	int green = getColor(center[vec], 1) - sub_green;
+	int red = getColor(center[vec], 2);
+
+
+	std::cout << blue << " " << green << " " << red << " \n";
+	if (blue > green)
+		if (blue > red)
+			blob_color[vec] = 1;
+		else
+			blob_color[vec] = 3;
+	else if (green > red)
+		blob_color[vec] = 2;
+	else
+		blob_color[vec] = 3;
+
+}
+void ImageProcessing::blobState()
+{
+	if (blob_circularity < blob_circularity_precision)
+		blob_state[blob_color[vec] + 5] = 1;
+	else
+		blob_state[blob_color[vec] + 5] = 2;
+}
+void ImageProcessing::circularity()
+{
+	blob_sqrt_area = 2 * sqrt(3.14*blob_area);
+	blob_circularity = blob_perimeter / blob_sqrt_area;
+}
+void ImageProcessing::draw()
+{
+	std::string vecS = std::to_string(blob_color[vec]);
+
+	Mat result(frame.size(), CV_8UC3, cv::Scalar(255, 255, 255));
+	if (blob_state[vec] == 1){
+		//rectangle(display_area, center[vec], Point(center[vec].x + 1, center[vec].y + 1), CV_RGB(0, 255, 0), 10);
+		putText(display_area, vecS, center[vec], FONT_HERSHEY_SIMPLEX, 1, CV_RGB(255, 255, 255), 3, 8, false);
+		//std::cout << blob_color[vec];
+	}
+	else{
+		//rectangle(display_area, center[vec], Point(center[vec].x + 1, center[vec].y + 1), CV_RGB(0, 0, 255), 10);
+		putText(display_area, vecS, center[vec], FONT_HERSHEY_SIMPLEX, 1, CV_RGB(255, 0, 0), 3, 8, false);
+		//std::cout << blob_color[vec];
+	}
+
+	//drawContours(result, contours,
+	//	-1,
+	//	cv::Scalar(0),
+	//	1);
+	//imshow("Game", display_area);
+
+
+}
 
 int main(int, char)
 {
@@ -592,8 +651,8 @@ int main(int, char)
 
 	EquationBox equationsP1;
 	EquationBox equationsP2;
-	equationsP1.eqLocation(0, 310, 50, 0, 0, 0, 0, IPGod.center, mathTimerP1.printin, equationsP1.equations);
-	equationsP2.eqLocation(1, 310, gameContainer.sizeX-100, 0, 0, 0, 0, IPGod.center, mathTimerP2.printin, equationsP2.equations);
+	equationsP1.eqLocation(0, 310, 50, 0, 0, 0, 0, IPGod.center, mathTimerP1.printin, equationsP1.equations, IPGod.blob_color);
+	equationsP2.eqLocation(1, 310, gameContainer.sizeX - 100, 0, 0, 0, 0, IPGod.center, mathTimerP2.printin, equationsP2.equations, IPGod.blob_color);
 	equationsP1.pickEquation();
 
 	AnswerBox answerBoxP1;
@@ -606,6 +665,7 @@ int main(int, char)
 	answers.numberGenerator(equationsP1.realAnswer, equationsP2.realAnswer);
 
 	cap >> IPGod.background;
+	IPGod.display_area = Mat::zeros(IPGod.background.size(), IPGod.background.type());
 	cvtColor(IPGod.background, IPGod.background, CV_RGB2GRAY);
 	for (;;){
 		cap >> IPGod.frame;
@@ -620,10 +680,11 @@ int main(int, char)
 
 		Mat image = Mat::zeros(gameContainer.sizeY, gameContainer.sizeX, CV_8UC3);
 		mathTimerP1.startTimer(120, 385);
-		answers.circulate(100, 100, IPGod.center, answerBoxP1.insideBox, IPGod.blob_state);
+		answers.circulate(100, 100, IPGod.center, answerBoxP1.insideBox, IPGod.blob_state, IPGod.blob_color);
 		//mathTimerP1.startTimer();
 		//mathTimerP2.startTimer(gameContainer.sizeX - gameContainer.sizeX / 4, gameContainer.sizeY - gameContainer.sizeY / 4);
-		image = gameContainer.image + answerBoxP1.image + answerBoxP2.image + answers.image + mathTimerP1.image + mathTimerP2.image + equationsP1.image + equationsP2.image + circles.image + IPGod.image;
+		image = gameContainer.image + answerBoxP1.image + answerBoxP2.image + answers.image + mathTimerP1.image + mathTimerP2.image + equationsP1.image + equationsP2.image + circles.image + IPGod.display_area;
+		IPGod.display_area = Mat::zeros(IPGod.frame.size(), IPGod.frame.type());
 		namedWindow("Gaaame", CV_WINDOW_AUTOSIZE);
 		imshow("Gaaame", image);
 		if (waitKey(30) >= 0)
