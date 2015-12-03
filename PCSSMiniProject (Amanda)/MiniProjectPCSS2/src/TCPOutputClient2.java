@@ -40,14 +40,14 @@ public class TCPOutputClient2 {
 			String message;
 			
 			//loop
-			do{
+			//do{
 				//recebe mensagem
 				message = input.nextLine();
 				
 				//we've now sent the message to the server. The server sends a response that needs to be catched
 				System.out.println("\nSERVER: " + message);	
 
-			} /*we do this as long as this -->*/ while(!message.equals("QUIT"));
+			//} /*we do this as long as this -->*/ while(!message.equals("QUIT"));
 		}
 		catch (IOException ioEx){
 			ioEx.printStackTrace();
