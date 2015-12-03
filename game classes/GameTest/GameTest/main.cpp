@@ -5,7 +5,10 @@ Description: Math game test realm.
 Update 1.0: Detect a hand and extract information such as size, gesture, and colour.
 Update 1.1: Created moving answer boxes in the center of the field.
 Update 1.2: Created a hand object to check for the user actions.
-Update 1.3: Create a box to check if the selected answer is correct.
+Update 1.3: Created a box to check if the selected answer is correct.
+Update 1.4: Created an object to generate random equations and answers.
+Update 1.5: Answer objects can now be grabed and draged.
+Update 1.6: Answer objects can now be grabed and draged only when the hand is closed on top of the object.
 */
 
 #define _USE_MATH_DEFINES
@@ -16,23 +19,24 @@ Update 1.3: Create a box to check if the selected answer is correct.
 using namespace cv;
 
 // General variables, exchange data between IP and game
-	int sub_blue, sub_green;
 	Point2f center[10],
-		point_list[11];;
+		point_list[11],
+		center_mass;
 	Mat background,
 		frame,
 		display_area;
+	Mat element = getStructuringElement(MORPH_RECT, Size(5, 5), Point(-1, -1));
 	int blob_state[10];
 	float speed = 0,
 		answer_list[] = { 1, 2, 0, 0, 5, 6, 7, 8, 9, 10, 11, 12 };
 	bool new_eq[] = { true, true, true, true };
-
+	int colour_value = 11;
 class Answer
 {
 
 public:
-	void set(Point2f center, float value);
-	void move(Point2f center);
+	void set(Point2f , float );
+	void move(Point2f );
 	void draw();
 	Point2f get_center();
 private:
@@ -44,7 +48,7 @@ private:
 class Rotator
 {
 public:
-	Rotator(Mat frame, Point2f start,int r);
+	Rotator(Mat , Point2f ,int );
 	void circulate();
 private:
 	int angle,
@@ -56,8 +60,8 @@ private:
 class Hand
 {
 public:
-	Hand(int index);
-	void set(int index);
+	Hand(int );
+	void set(int );
 	void grab();
 	bool get_hold();
 	int get_holded();
@@ -74,31 +78,46 @@ private:
 class DropBox
 {
 public:
-	DropBox(int index, Point2f loc);
+	DropBox(int , Point2f , Scalar);
 	void check();
 	void draw();
 private:
-	int player_colour,
+	int index,
 		correct_answer;
 	Point2f location,
 		location_op;
 	Scalar box_colour;
 };
+
 class Equation
 {
 public:
-	Equation(Point2f loc, Scalar colour,int in);
+	Equation(Point2f , Scalar ,int );
 	void generate();
 	void draw();
 	int get_answer();
 private:
-	String equation;
+	std::string equation;
 	int correct_answer,
 		index;
 	Point2f location,
 		location_op;
 	Scalar box_colour;
 };
+
+class Score
+{
+public:
+	Score(int , Point2f, Scalar);
+	void gain();
+	void draw();
+private:
+	int index,
+		score;
+	Point2f location;
+	Scalar box_colour;
+};
+
 
 class ImageProcessing																			//Image processing class, contains the functions to find objects in the image.
 {
@@ -121,9 +140,9 @@ public:
 
 	void draw();																				//Draw contours.
 
-	void whiteBalance(Point2f center);															//Colour balance, adjusts all colours to be equal at white.
+	void whiteBalance(Point2f );																//Colour balance, adjusts all colours to be equal at white.
 
-	int getColour(Point2f center, int ch);														//Get the colour from the 9 central pixels.
+	int getColour(Point2f , int);																//Get the colour from the 9 central pixels.
 
 private:
 	Mat thresholded,
@@ -132,9 +151,9 @@ private:
 		contour_frame;
 	std::vector<std::vector<cv::Point>> contours;
 	int min_contour = 100,																		//Minimum size of the contour to be counted as objet of interest.
-		max_contour = 950,																		//Maximum size of the contour to be counted as objet of interest.
+		max_contour = 650,																		//Maximum size of the contour to be counted as objet of interest.
 		min_area = 1200,
-		max_area = 10400,
+		max_area = 7400,
 		blob_area,
 		blob_colour,
 		vec;
@@ -146,7 +165,7 @@ private:
 		blob_perimeter,
 		blob_sqrt_area,
 		blob_circularity,
-		blob_circularity_precision = 1.2;														//Circularity threshold, determine state/gesture.
+		blob_circularity_precision = 1.5;														//Circularity threshold, determine state/gesture.
 
 
 
@@ -171,25 +190,27 @@ int main(int, char)
 		if (waitKey(30)>=0)
 			break;
 	}
-
 	cap >> background;
-	imshow("bg", background);
 	display_area = Mat::zeros(background.size(), background.type());
 	cvtColor(background, background, CV_RGB2GRAY);
 	Point2f image_center(2*background.rows/3,2*background.cols/3);
 
 	Answer answer[12];
 	Rotator Rot(background,image_center,background.rows/2.2);
-	DropBox BoxP1(2, Point2f(0, 2 * display_area.rows / 5));
-	DropBox BoxP2(3, Point2f(11* display_area.cols / 12, 2 * display_area.rows / 5));
-	Equation Eq1(Point2f(50, 50), Scalar(0, 100, 0),2);
-	Equation Eq2(Point2f(11 * display_area.cols / 12-50, 4 * display_area.rows / 5-50), Scalar(0, 0, 100),3);
+	DropBox BoxP1(2, Point2f(0, 2 * display_area.rows / 5), Scalar(0, 100, 0));
+	DropBox BoxP2(3, Point2f(11 * display_area.cols / 12, 2 * display_area.rows / 5), Scalar(0, 0, 255));
+	Equation Eq1(Point2f(50, 50), Scalar(0, 255, 0),2);
+	Equation Eq2(Point2f(11 * display_area.cols / 12-50, 4 * display_area.rows / 5-50), Scalar(0, 0, 255),3);
+	Score Sc1(2, Point2f(50, 4 * display_area.rows / 5 - 50), Scalar(0, 255, 0));
+	Score Sc2(3, Point2f(11 * display_area.cols / 12 - 50, 50), Scalar(0, 0, 255));
 	Hand P1(2);
 	Hand P2(3);
+
 	for (;;)
 	{
 		//preparation
 		cap >> frame;
+		Mat hsv_frame;
 		for (int i = 0; i < 10; i++)
 			center[i] = center[i] * 0;
 		
@@ -199,10 +220,14 @@ int main(int, char)
 		IPGod.eliminteContours();
 		
 		//use of game code
-		if (new_eq[2])
+		if (new_eq[2]){
 			Eq1.generate();
-		if (new_eq[3])
+			Sc1.gain();
+		}
+		if (new_eq[3]){
 			Eq2.generate();
+			Sc2.gain();
+		}
 		Rot.circulate();
 		P1.set(2);
 		P1.grab();
@@ -210,14 +235,15 @@ int main(int, char)
 		P2.grab();
 		for (int i = 0; i < 12; i++)
 		{
-			if (P1.get_hold() && P1.get_holded() == answer_list[i]+200)
+			if (P1.get_hold() && P1.get_holded() == answer_list[i]+colour_value)
 			{
 				float distance1 = sqrt((center[2].x - answer[i].get_center().x)*(center[2].x - answer[i].get_center().x) + (center[2].y - answer[i].get_center().y)*(center[2].y - answer[i].get_center().y));
 				if (distance1 < 40)
 					answer[i].set(center[2], answer_list[i]);
 				else
 					answer[i].set(point_list[i], answer_list[i]);
-			}else if (P2.get_hold() && P2.get_holded() == answer_list[i]+200)
+			}
+			else if (P2.get_hold() && P2.get_holded() == answer_list[i] + colour_value)
 			{
 				float distance2 = sqrt((center[3].x - answer[i].get_center().x)*(center[3].x - answer[i].get_center().x) + (center[3].y - answer[i].get_center().y)*(center[3].y - answer[i].get_center().y));
 				if (distance2 < 40)
@@ -240,15 +266,14 @@ int main(int, char)
 		BoxP2.draw();
 		Eq1.draw();
 		Eq2.draw();
+		Sc1.draw();
+		Sc2.draw();
 		imshow("Game", display_area);
 		BoxP1.check();
 		BoxP2.check();
-		//balance option
+		//brake option
 		if (waitKey(1) >= 0){
-			std::cout << "Sign\n";
-			waitKey(0);
-			IPGod.whiteBalance(center[0]);
-			std::cout << "Second Sign\n";
+			break;
 		}
 	}
 	return 0;
@@ -258,7 +283,7 @@ void Answer::set(Point2f center, float value)
 {
 	answer_center = center;
 	answer_value = value;
-	answer_colour = Scalar(answer_value+200,0,0);
+	answer_colour = Scalar(answer_value + colour_value, 0, 0);
 
 }
 Point2f Answer::get_center()
@@ -325,9 +350,9 @@ void Hand::set(int index)
 void Hand::grab()
 {
 
-	if (hand_state == 2)//remove open if not working
+	if (hand_state==1&&open)//remove open if not working
 	{
-		//open = false;
+		open = false;
 		colour_bellow = display_area.at<Vec3b>(hand_center)[0];
 		if (true)
 		{
@@ -336,21 +361,20 @@ void Hand::grab()
 			
 		}
 	}
-	if (hand_state == 1){
+	if (hand_state==2||new_eq[hand_colour]){
 		hold = false;
 		open = true;
 	}
 }
 
 //DropBox
-DropBox::DropBox(int index, Point2f loc)
+DropBox::DropBox(int in, Point2f loc, Scalar colour)
 {
-	correct_answer = answer_list[index];
-	player_colour = index;
+	correct_answer = answer_list[in];
+	index = in;
 	location = loc;
 	location_op=location+Point2f(display_area.cols / 12, display_area.rows / 5);
-	box_colour = Scalar(0, 0, 0);
-	box_colour.val[index-1] = 255;
+	box_colour = colour;
 	
 }
 void DropBox::check()
@@ -360,10 +384,11 @@ void DropBox::check()
 	{
 		for (int x = location.x; x < location_op.x; x++)
 		{
-			if (display_area.at<Vec3b>(y, x)[0]== answer_list[player_colour])
+			if (display_area.at<Vec3b>(y, x)[0] == answer_list[index] + colour_value)
 			{
-				new_eq[player_colour] = true;
-				std::cout << "check\n";
+				new_eq[index] = true;
+				break;
+				break;
 			}
 		}
 	}
@@ -378,56 +403,71 @@ Equation::Equation(Point2f loc, Scalar colour,int in)
 {
 	index = in;
 	location = loc;
-	location_op =location+ Point2f(display_area.cols / 12, display_area.rows / 5);
 	box_colour = colour;
 }
 void Equation::generate()
 {
 	new_eq[index] = false;
-	srand(time(NULL)+index);
-	int first_number = 1 + rand() % 10;
-	int second_number =1 + rand() % 10;
-	int operation = rand() % 3;
+	srand(time(NULL) + index);
+	int first_number;
+	int second_number;
+	int operation;
+	bool valid = false;
+	do{
+		first_number = 1 + rand() % 10;
+		second_number = 1 + rand() % 10;
+		operation = rand() % 3;
+		if (operation == 2 && first_number*second_number > 55)
+			valid = true;
+		else
+			valid = false;
+	} while (valid);
 
 	switch (operation) {
 	case 0:
 		answer_list[index] = first_number + second_number;
+		answer_list[index+8] = first_number + second_number;
 		equation = std::to_string(first_number) + "+" + std::to_string(second_number) + "=";
 		break;
 	case 1:
 		answer_list[index] = first_number - second_number;
+		answer_list[index+8] = first_number - second_number;
 		equation = std::to_string(first_number) + "-" + std::to_string(second_number) + "=";
 		break;
 	case 2:
 		answer_list[index] = first_number * second_number;
+		answer_list[index+8] = first_number * second_number;
 		equation = std::to_string(first_number) + "*" + std::to_string(second_number) + "=";
 		break;
 	default:
-		generate();
+
 		break;
 	}
 }
 void Equation::draw()
 {
-	//rectangle(display_area, location, location_op, box_colour, 2);
 	putText(display_area, equation, location , FONT_HERSHEY_SIMPLEX, 1, box_colour, 1, 1, false);
 }
 
-//ImageProcessing
-void ImageProcessing::whiteBalance(Point2f center)
+//Score
+Score::Score(int in, Point2f loc, Scalar colour)
 {
-	sub_blue = 0;
-	sub_green = 0;
-	int color[3];
-	for (int i = 0; i < 3; i++)
-	{
-		color[i] = getColour(center, i);
-	}
-	sub_blue = color[0] - color[2];
-	sub_green = color[1] - color[2];
-	std::cout << "**************************************************" << sub_blue << " " << sub_green << " \n";
-
+	index = in;
+	location = loc;
+	box_colour = colour;
+	score = -1;
 }
+void Score::gain()
+{
+	score++;
+}
+void Score::draw()
+{
+	std::string string_score = std::to_string(score);
+	putText(display_area, string_score, location, FONT_HERSHEY_SIMPLEX, 1, box_colour, 1, 1, false);
+}
+//ImageProcessing
+
 void ImageProcessing::eliminteContours()
 {
 	std::vector<std::vector<cv::Point>>::
@@ -449,18 +489,25 @@ void ImageProcessing::eliminteContours()
 
 			blob_perimeter = itc->size();
 			blobArea();
+			
 			if (blob_area < min_area || blob_area>max_area)
 				itc = contours.erase(itc);
-			else{
-				center[0] = center[0] * 0;
-				minEnclosingCircle(Mat(contours[vec]), center[0], radius);
-				circularity();
+			else
+			{
 				blobColour();
-				center[blob_colour] = center[0];
-				blobState();
+				if (blob_colour==1)
+				{
+					itc = contours.erase(itc);
+				}
+				else{
+					minEnclosingCircle(Mat(contours[vec]), center[0], radius);
+					circularity();
 
-				++vec;
-				++itc;
+					center[blob_colour] = center_mass;
+					blobState();
+					++vec;
+					++itc;
+				}
 			}
 		}
 	}
@@ -468,10 +515,12 @@ void ImageProcessing::eliminteContours()
 void ImageProcessing::thresholding()
 {
 	cvtColor(frame, gray_frame, CV_RGB2GRAY);
-
+	
 	subtract(gray_frame, background, subtracted, noArray(), -1);
 	medianBlur(subtracted, subtracted, 5);
-	threshold(subtracted, thresholded, 10, 255, CV_THRESH_BINARY);
+	threshold(subtracted, subtracted, 10, 255, CV_THRESH_BINARY);
+	dilate(subtracted, thresholded, element);
+	erode(thresholded, thresholded, element);
 
 }
 void ImageProcessing::contour()
@@ -488,6 +537,9 @@ void ImageProcessing::blobArea()
 	double yMax = rec_y + rec_height - 1;
 	double xMax = rec_x + rec_width - 1;
 	blob_area = 1;
+	int center_mass_x = 0,
+		center_mass_y = 0;
+	center_mass = center_mass*0;
 	for (int y = rec_y; y < yMax; y++)
 	{
 		for (int x = rec_x; x < xMax; x++)
@@ -495,10 +547,13 @@ void ImageProcessing::blobArea()
 			if (thresholded.at<unsigned char>(y, x)>0)
 			{
 				blob_area++;
-
+				center_mass_x =center_mass_x+x,
+				center_mass_y =center_mass_y+y;
 			}
 		}
 	}
+	center_mass.x = center_mass_x / blob_area;
+	center_mass.y = center_mass_y / blob_area;
 }
 int ImageProcessing::getColour(Point2f center, int ch)
 {
@@ -515,11 +570,11 @@ int ImageProcessing::getColour(Point2f center, int ch)
 }
 void ImageProcessing::blobColour()
 {
-	int blue = getColour(center[0], 0) - sub_blue;
-	int green = getColour(center[0], 1) - sub_green;
-	int red = getColour(center[0], 2);
-
-
+	int blue = getColour(center_mass, 0)-30;
+	int green = getColour(center_mass, 1);
+	int red = getColour(center_mass, 2)+20;
+	 
+	std::cout << blue << " " << green << " " << red << "\n";
 	if (blue > green)
 		if (blue > red)
 			blob_colour = 1;
@@ -553,9 +608,15 @@ void ImageProcessing::draw()
 		std::string vecS = std::to_string(i);
 		putText(result, vecS, center[i], FONT_HERSHEY_SIMPLEX, 1, CV_RGB(255, 255, 255), 3, 8, false);
 		if (blob_state[i] == 2)
+		{
 			circle(display_area, center[i], 5, CV_RGB(0, 255, 0), CV_FILLED);
+			circle(result, center[i], 5, CV_RGB(0, 255, 0), CV_FILLED);
+		}
 		else
+		{
 			circle(display_area, center[i], 5, CV_RGB(0, 0, 255), CV_FILLED);
+			circle(display_area, center[i], 5, CV_RGB(0, 0, 255), CV_FILLED);
+		}
 	}
 
 
@@ -564,8 +625,8 @@ void ImageProcessing::draw()
 		cv::Scalar(255, 255, 255),
 		1);
 	imshow("IP", result);
-//	imshow("SB", subtracted);
-//	imshow("TH", thresholded);
+	imshow("SB", subtracted);
+	imshow("TH", thresholded);
 }
 
 
