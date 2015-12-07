@@ -1,6 +1,7 @@
 import java.net.*;
 import java.util.*;
 import java.io.*;
+
 import javax.print.DocFlavor.CHAR_ARRAY;
 
 public class TCPOutputClient2 {
@@ -43,6 +44,9 @@ public class TCPOutputClient2 {
 			//do{
 				//recebe mensagem
 				message = input.nextLine();
+				
+				BinaryTreeClass bt = new BinaryTreeClass();
+				bt.btClass(message);
 				
 				//we've now sent the message to the server. The server sends a response that needs to be catched
 				System.out.println("\nSERVER: " + message);	

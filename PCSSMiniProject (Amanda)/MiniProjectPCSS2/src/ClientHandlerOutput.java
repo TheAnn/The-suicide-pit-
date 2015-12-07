@@ -54,6 +54,8 @@ public class ClientHandlerOutput extends Thread {
 		//make method to bubble sort, binary tree, quicksort
 		//sends modified message to the client
 
+		
+		
 		output.println(TCPServer2.getClientMessage());
 
 		try{

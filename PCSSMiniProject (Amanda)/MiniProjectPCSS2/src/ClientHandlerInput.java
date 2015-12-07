@@ -27,7 +27,7 @@ public class ClientHandlerInput extends Thread {
 	public void run(){
 		do{
 			//we save the input message in the received String
-			this.receivedMessage = input.nextLine();
+			this.receivedMessage = input.nextLine();			
 			
 			TCPServer2.setClientMessage(this.receivedMessage);
 			output.println("Message Received.");
