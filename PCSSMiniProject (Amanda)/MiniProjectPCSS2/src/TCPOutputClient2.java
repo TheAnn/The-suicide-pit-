@@ -48,6 +48,12 @@ public class TCPOutputClient2 {
 				BinaryTreeClass bt = new BinaryTreeClass();
 				bt.btClass(message);
 				
+				QuickSort qs = new QuickSort();
+				qs.qsClass(message);
+				
+				BubbleSort bs = new BubbleSort();
+				bs.bsClass(message);
+				
 				//we've now sent the message to the server. The server sends a response that needs to be catched
 				System.out.println("\nSERVER: " + message);	
 

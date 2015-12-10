@@ -1,5 +1,3 @@
-
-
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -74,14 +72,13 @@ public class BinaryTreeClass {
 	        if(node==null) return;
 
 	        printTree(node.left);
-	        System.out.print(node.data + " " + node.word + " ");
+	        System.out.print(node.data + " " + node.word + "; ");
 	        printTree(node.right);
 	    }
 
        
         public static void accWordCount(String source, BinaryTreeClass bt){	
-        	LinkedList ll = new LinkedList();
-        	
+        	LinkedList ll = new LinkedList();        	
         	char[] sourceArr=source.toCharArray();
         	int newPos = 0;
         	for(int i=0;i<sourceArr.length;i++){
@@ -99,7 +96,7 @@ public class BinaryTreeClass {
         	
         	int[] accInt = new int [ll.size()];
         	
-        	System.out.println("Number of words: " + ll.size());
+        	//System.out.println("Number of words & additional spaces: " + ll.size());
         	
         	for(int i = 0; i < ll.size(); i++){
         		accInt[i] = 1;
@@ -121,5 +118,6 @@ public class BinaryTreeClass {
         accWordCount(message, bt);
         System.out.println("Binary tree sorted: ");
         bt.printTree();
+        System.out.println();
 	    }
 }
