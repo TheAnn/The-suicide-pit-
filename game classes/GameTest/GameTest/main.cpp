@@ -25,7 +25,7 @@ using namespace cv;
 	Mat background,
 		frame,
 		display_area;
-	Mat element = getStructuringElement(MORPH_RECT, Size(5, 5), Point(-1, -1));
+	Mat element = getStructuringElement(MORPH_RECT, Size(15, 15), Point(-1, -1));
 	int blob_state[10];
 	float speed = 0,
 		answer_list[] = { 1, 2, 0, 0, 5, 6, 7, 8, 9, 10, 11, 12 };
@@ -95,7 +95,6 @@ public:
 	Equation(Point2f , Scalar ,int );
 	void generate();
 	void draw();
-	int get_answer();
 private:
 	std::string equation;
 	int correct_answer,
@@ -151,9 +150,9 @@ private:
 		contour_frame;
 	std::vector<std::vector<cv::Point>> contours;
 	int min_contour = 100,																		//Minimum size of the contour to be counted as objet of interest.
-		max_contour = 650,																		//Maximum size of the contour to be counted as objet of interest.
-		min_area = 1200,
-		max_area = 7400,
+		max_contour = 700,																		//Maximum size of the contour to be counted as objet of interest.
+		min_area = 2500,
+		max_area = 8000,
 		blob_area,
 		blob_colour,
 		vec;
@@ -166,9 +165,6 @@ private:
 		blob_sqrt_area,
 		blob_circularity,
 		blob_circularity_precision = 1.5;														//Circularity threshold, determine state/gesture.
-
-
-
 };
 
 int main(int, char)
@@ -184,13 +180,14 @@ int main(int, char)
 		return -1;
 	for (;;)
 	{
-		Mat a;
-		cap >> a;
-		imshow("SODA", a);
+		Mat background_frame_test;
+		cap >> background_frame_test;
+		imshow("BFT", background_frame_test);
 		if (waitKey(30)>=0)
 			break;
 	}
 	cap >> background;
+
 	display_area = Mat::zeros(background.size(), background.type());
 	cvtColor(background, background, CV_RGB2GRAY);
 	Point2f image_center(2*background.rows/3,2*background.cols/3);
@@ -210,7 +207,6 @@ int main(int, char)
 	{
 		//preparation
 		cap >> frame;
-		Mat hsv_frame;
 		for (int i = 0; i < 10; i++)
 			center[i] = center[i] * 0;
 		
@@ -349,17 +345,12 @@ void Hand::set(int index)
 }
 void Hand::grab()
 {
-
-	if (hand_state==1&&open)//remove open if not working
+	if (hand_state==1&&open)
 	{
 		open = false;
 		colour_bellow = display_area.at<Vec3b>(hand_center)[0];
-		if (true)
-		{
 			hold = true;
 			holded = colour_bellow;
-			
-		}
 	}
 	if (hand_state==2||new_eq[hand_colour]){
 		hold = false;
@@ -378,8 +369,7 @@ DropBox::DropBox(int in, Point2f loc, Scalar colour)
 	
 }
 void DropBox::check()
-{
-	
+{	
 	for (int y = location.y; y < location_op.y; y++)
 	{
 		for (int x = location.x; x < location_op.x; x++)
@@ -502,7 +492,6 @@ void ImageProcessing::eliminteContours()
 				else{
 					minEnclosingCircle(Mat(contours[vec]), center[0], radius);
 					circularity();
-
 					center[blob_colour] = center_mass;
 					blobState();
 					++vec;
@@ -518,8 +507,8 @@ void ImageProcessing::thresholding()
 	
 	subtract(gray_frame, background, subtracted, noArray(), -1);
 	medianBlur(subtracted, subtracted, 5);
-	threshold(subtracted, subtracted, 10, 255, CV_THRESH_BINARY);
-	dilate(subtracted, thresholded, element);
+	threshold(subtracted, thresholded, 50, 255, CV_THRESH_BINARY);
+	dilate(thresholded, thresholded, element);
 	erode(thresholded, thresholded, element);
 
 }
@@ -544,7 +533,7 @@ void ImageProcessing::blobArea()
 	{
 		for (int x = rec_x; x < xMax; x++)
 		{
-			if (thresholded.at<unsigned char>(y, x)>0)
+			if (thresholded.at<unsigned char>(y, x)>0)	
 			{
 				blob_area++;
 				center_mass_x =center_mass_x+x,
@@ -560,10 +549,11 @@ int ImageProcessing::getColour(Point2f center, int ch)
 	int color = 0;
 	for (int i = -1; i < 2; i++)
 	{
-		if (!center.x + i<0 || !center.x + i>640 || !center.y + i<0 || !center.y + i>480)
+		if (!center.x + i < 0 || !center.x + i>640 || !center.y + i < 0 || !center.y + i>480)
 			color = +frame.at<Vec3b>(center.y - 1, center.x + i)[ch] +
 			frame.at<Vec3b>(center.y, center.x + i)[ch] +
 			frame.at<Vec3b>(center.y + 1, center.x + i)[ch];
+		std::cout << color << "\n";
 	}
 
 	return color;
@@ -574,7 +564,6 @@ void ImageProcessing::blobColour()
 	int green = getColour(center_mass, 1);
 	int red = getColour(center_mass, 2)+20;
 	 
-	std::cout << blue << " " << green << " " << red << "\n";
 	if (blue > green)
 		if (blue > red)
 			blob_colour = 1;
@@ -595,7 +584,7 @@ void ImageProcessing::blobState()
 }
 void ImageProcessing::circularity()
 {
-	blob_sqrt_area = 2 * sqrt(3.14*blob_area);
+	blob_sqrt_area = 2 * sqrt(M_PI*blob_area);
 	blob_circularity = blob_perimeter / blob_sqrt_area;
 }
 void ImageProcessing::draw()
@@ -610,11 +599,9 @@ void ImageProcessing::draw()
 		if (blob_state[i] == 2)
 		{
 			circle(display_area, center[i], 5, CV_RGB(0, 255, 0), CV_FILLED);
-			circle(result, center[i], 5, CV_RGB(0, 255, 0), CV_FILLED);
 		}
 		else
 		{
-			circle(display_area, center[i], 5, CV_RGB(0, 0, 255), CV_FILLED);
 			circle(display_area, center[i], 5, CV_RGB(0, 0, 255), CV_FILLED);
 		}
 	}
@@ -627,6 +614,8 @@ void ImageProcessing::draw()
 	imshow("IP", result);
 	imshow("SB", subtracted);
 	imshow("TH", thresholded);
+	imshow("FR", frame);
+	imshow("CF", contour_frame);
 }
 
 
