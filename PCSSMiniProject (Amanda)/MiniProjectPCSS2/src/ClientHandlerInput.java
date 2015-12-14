@@ -8,10 +8,9 @@ public class ClientHandlerInput extends Thread {
 	private Socket client;
 	private Scanner input;
 	private PrintWriter output;
-	private String receivedClientMessage;
+	private String receivedMessage;
 	
-	public ClientHandlerInput(Socket socket, String clientMessage){
-		this.receivedClientMessage = clientMessage;
+	public ClientHandlerInput(Socket socket){
 		client = socket;
 		//try to set up the input and output stream to server
 		try{
@@ -28,11 +27,13 @@ public class ClientHandlerInput extends Thread {
 	public void run(){
 		do{
 			//we save the input message in the received String
-			this.receivedClientMessage = input.nextLine();
+			this.receivedMessage = input.nextLine();			
+			
+			TCPServer2.setClientMessage(this.receivedMessage);
 			output.println("Message Received.");
 		}
 		//we do that as long as the equals has not received "QUIT" message
-		while (!this.receivedClientMessage.equals("QUIT"));
+		while (!this.receivedMessage.equals("QUIT"));
 		
 		try{
 			if (client!=null){
@@ -42,7 +43,7 @@ public class ClientHandlerInput extends Thread {
 		}
 		catch(IOException ioEx){
 			System.out.println("Unnable to disconnet");
-			//is the server is unable to disconnect we exit
+			
 		}
 	}
 

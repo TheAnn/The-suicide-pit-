@@ -1,6 +1,7 @@
 import java.net.*;
 import java.util.*;
 import java.io.*;
+
 import javax.print.DocFlavor.CHAR_ARRAY;
 
 public class TCPOutputClient2 {
@@ -40,14 +41,23 @@ public class TCPOutputClient2 {
 			String message;
 			
 			//loop
-			do{
+			//do{
 				//recebe mensagem
 				message = input.nextLine();
+				
+				BinaryTreeClass bt = new BinaryTreeClass();
+				bt.btClass(message);
+				
+				QuickSort qs = new QuickSort();
+				qs.qsClass(message);
+				
+				BubbleSort bs = new BubbleSort();
+				bs.bsClass(message);
 				
 				//we've now sent the message to the server. The server sends a response that needs to be catched
 				System.out.println("\nSERVER: " + message);	
 
-			} /*we do this as long as this -->*/ while(!message.equals("QUIT"));
+			//} /*we do this as long as this -->*/ while(!message.equals("QUIT"));
 		}
 		catch (IOException ioEx){
 			ioEx.printStackTrace();
